@@ -1,0 +1,411 @@
+{
+  "project": "Tasbiaat & Mamolaat Web App - Backend (Relations & Rules)",
+  "platform": "Flask REST API",
+  "database": "MongoDB Atlas (pymongo / motor)",
+  "roles": [
+    "Saalik",
+    "Murabi",
+    "Masool",
+    "Sheikh",
+    "Admin (Super Admin / System Admin)"
+  ],
+  "user_relationships": {
+    "overview": "Defines who creates whom and parent-child relationships.",
+    "rules": [
+      "Super Admin can create any role: Sheikh, Masool, Murabi, Saalik, Admin.",
+      "Sheikh can create Masool and Murabi.",
+      "Masool can create Murabi and Saalik.",
+      "Murabi can create Saaliks.",
+      "Each Saalik must be assigned to exactly one Murabi.",
+      "Each Murabi belongs to exactly one Masool.",
+      "Each Masool belongs to exactly one Sheikh.",
+      "Murabi can have multiple Saaliks.",
+      "Masool can have multiple Murabis.",
+      "Sheikh can have multiple Masools."
+    ],
+    "relationship_fields": {
+      "users": {
+        "murabiId": "ObjectId or null (for a Saalik, points to their Murabi)",
+        "masoolId": "ObjectId or null (for a Murabi, points to their Masool)",
+        "sheikhId": "ObjectId or null (for a Masool, points to their Sheikh)",
+        "createdBy": "ObjectId (user who created this user)"
+      }
+    }
+  },
+  "business_rules": {
+    "level_cycles": {
+      "default_cycle_days": 40,
+      "cycle_can_be_overridden_by": "Murabi (via update_level action)",
+      "cycle_tracking": "Each Saalik has levelStartDate and cycleDays stored in users collection. entries store day_index and levelAtEntry."
+    },
+    "zikr_mandatory_rule": {
+      "description": "Zikr is mandatory daily. If Zikr is missed on any day within a cycle, the current 40-day (or overridden) cycle will either: automatically restart OR be reset by Murabi based on configuration.",
+      "modes": [
+        {
+          "auto_restart": {
+            "behavior": "System will automatically set Saalik.levelStartDate = currentDate and reset day_index to 1 when a missing Zikr is detected within active cycle.",
+            "trigger": "Scheduled daily job examines last entry for each Saalik; if today's entry missing mandatory Zikr -> reset",
+            "notification": "Notify Saalik and Murabi via notification endpoint/event"
+          }
+        },
+        {
+          "murabi_controlled": {
+            "behavior": "System flags missed Zikr day and marks cycle as 'paused'. Murabi can either restart or reset cycle via endpoint PATCH /v1/saalik/:id/reset-cycle",
+            "audit": "Murabi action recorded in audit log with comment"
+          }
+        }
+      ]
+    },
+    "data_storage_rule": "All Saalik daily entries are stored against the assigned Murabi (entry.murabiId) to support Murabi-centric queries and review flows."
+  },
+  "collections": {
+    "users": {
+      "schema": {
+        "_id": "ObjectId",
+        "name": "string",
+        "email": "string (unique)",
+        "passwordHash": "string",
+        "role": "enum ['Saalik','Murabi','Masool','Sheikh','Admin']",
+        "region": "string",
+        "murabiId": "ObjectId | null (for Saalik)",
+        "masoolId": "ObjectId | null (for Murabi)",
+        "sheikhId": "ObjectId | null (for Masool)",
+        "level": "int (0..6) - current level (for Saalik)",
+        "levelStartDate": "date - when current level cycle started (for Saalik)",
+        "cycleDays": "int - number of days in current cycle (default 40)",
+        "settings": {
+          "zikrMode": "string enum ['auto_restart','murabi_controlled']",
+          "notificationsEnabled": "bool"
+        },
+        "isActive": "bool",
+        "createdAt": "datetime",
+        "updatedAt": "datetime",
+        "createdBy": "ObjectId (who created this user)"
+      },
+      "indexes": [
+        {"key": {"email": 1}, "unique": true},
+        {"key": {"role": 1}},
+        {"key": {"murabiId": 1}},
+        {"key": {"masoolId": 1}},
+        {"key": {"sheikhId": 1}}
+      ]
+    },
+    "entries": {
+      "schema": {
+        "_id": "ObjectId",
+        "userId": "ObjectId (Saalik)",
+        "murabiId": "ObjectId (redundant for performance, snapshot of assigned Murabi at time of entry)",
+        "date": "YYYY-MM-DD string or date",
+        "day_index": "int (1..cycleDays)",
+        "saalik_level": "int (0..6)",
+        "levelAtEntry": "int",
+        "categories": "object (mirrors UI payload, Urdu labels preserved)",
+        "zikrCompleted": "bool (computed field for quick query)",
+        "status": "enum ['draft','submitted','reviewed']",
+        "comments": [
+          {"byUserId": "ObjectId", "role": "string", "text": "string", "createdAt": "datetime"}
+        ],
+        "createdAt": "datetime",
+        "updatedAt": "datetime",
+        "audit": [
+          {"action": "string", "by": "ObjectId", "at": "datetime", "meta": {}}
+        ]
+      },
+      "indexes": [
+        {"key": {"userId": 1, "date": 1}, "unique": true},
+        {"key": {"murabiId": 1}},
+        {"key": {"date": 1}},
+        {"key": {"status": 1}}
+      ]
+    },
+    "levels": {
+      "schema": {
+        "level": "int",
+        "name_urdu": "string",
+        "description": "string",
+        "requiredFields": "array of field paths",
+        "createdAt": "datetime",
+        "updatedAt": "datetime"
+      }
+    },
+    "sessions": {
+      "purpose": "Store api_session_key, session metadata and TTL. Use Redis for fast ops but keep reference here for audits if needed.",
+      "schema": {
+        "sessionId": "string",
+        "userId": "ObjectId",
+        "api_session_key": "base64 string (encrypted at rest)",
+        "createdAt": "datetime",
+        "expiresAt": "datetime",
+        "lastUsedAt": "datetime"
+      }
+    },
+    "nonces": {
+      "purpose": "Short-lived store for nonces to prevent replay (Redis recommended).",
+      "schema": {
+        "nonce": "string",
+        "sessionId": "string",
+        "expiresAt": "datetime"
+      }
+    },
+    "notifications": {
+      "schema": {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "type": "string",
+        "payload": "object",
+        "sentAt": "datetime",
+        "read": "bool"
+      }
+    },
+    "audit_logs": {
+      "schema": {
+        "_id": "ObjectId",
+        "actorId": "ObjectId",
+        "actorRole": "string",
+        "action": "string",
+        "targetId": "ObjectId | null",
+        "meta": "object",
+        "timestamp": "datetime"
+      }
+    }
+  },
+  "api_endpoints": {
+    "auth": {
+      "POST /v1/auth/login": {
+        "input": {"email": "string", "password": "string"},
+        "output": {
+          "access_token": "JWT",
+          "refresh_token": "string",
+          "user": {"id": "string", "role": "string", "level": "int"},
+          "sessionId": "string",
+          "api_session_key": "base64 (client should keep in memory only)"
+        },
+        "notes": "Server creates session (store api_session_key in Redis)."
+      },
+      "POST /v1/auth/refresh": "Rotate or reissue access_token and optionally api_session_key",
+      "POST /v1/auth/logout": "Invalidate sessionId and delete api_session_key"
+    },
+    "users": {
+      "POST /v1/users": {
+        "purpose": "Create user (Super Admin / allowed roles only). Enforce creation rules by creator.role.",
+        "input": {
+          "authToken": "JWT (creator)",
+          "systemKey": "encrypted key",
+          "data": {
+            "name": "string",
+            "email": "string",
+            "password": "string",
+            "role": "string",
+            "region": "string",
+            "murabiId": "ObjectId | null",
+            "masoolId": "ObjectId | null",
+            "sheikhId": "ObjectId | null"
+          }
+        },
+        "business_checks": [
+          "If creator.role == 'Sheikh' -> allowed to create roles ['Masool','Murabi'] only",
+          "If creator.role == 'Masool' -> allowed to create roles ['Murabi','Saalik'] only",
+          "If creator.role == 'Murabi' -> allowed to create ['Saalik'] only",
+          "If creator.role == 'Admin' -> allowed to create any role"
+        ]
+      },
+      "PATCH /v1/users/:id": "Update user profile (restricted). Admin can update everything; other roles limited.",
+      "GET /v1/users": "List users, allow filters by role and region (role-based visibility)."
+    },
+    "entries": {
+      "POST /v1/entries": {
+        "purpose": "Create Saalik daily entry",
+        "input": {
+          "authToken": "JWT",
+          "systemKey": "encrypted per-request key",
+          "data": {
+            "userId": "string",
+            "date": "YYYY-MM-DD",
+            "saalik_level": "int",
+            "categories": "object",
+            "status": "draft|submitted"
+          }
+        },
+        "server_behaviour": [
+          "Verify JWT and sessionId",
+          "Fetch user's assigned murabiId and set entry.murabiId to that value (override if provided)",
+          "Compute zikrCompleted boolean from categories.zikr fields",
+          "If submitted: validate requiredFields for user's current level (from levels collection)",
+          "Set day_index based on levelStartDate and date; if no levelStartDate set, initialize with date and day_index=1",
+          "Insert entry and create audit log"
+        ],
+        "errors": {
+          "400": "Missing required fields or validation failed",
+          "401": "Invalid JWT or session",
+          "403": "Invalid systemKey"
+        }
+      },
+      "GET /v1/entries": "List entries (filters: userId, murabiId, date range, status). Enforce role-based restriction: Murabi sees only their Saaliks, Masool sees only their Murabis' Saaliks, Sheikh sees Masool scope, Admin sees all.",
+      "PATCH /v1/entries/:id": {
+        "purpose": "Update entry (only owner Saalik for drafts, Murabi for status/level changes)",
+        "behaviour": [
+          "If Murabi updates level for Saalik, update user.level and levelStartDate if resetting cycle.",
+          "Add comment to entry.audit"
+        ]
+      },
+      "POST /v1/entries/:id/comment": "Add comment; allowed for Murabi/Masool/Sheikh/Admin per policies"
+    },
+    "levels": {
+      "GET /v1/levels": "Return all levels and requiredFields",
+      "GET /v1/levels/:level": "Return metadata for one level",
+      "POST /v1/levels": "Admin only - create or update level definitions"
+    },
+    "reports": {
+      "GET /v1/reports/weekly": "Masool and above. Aggregates entries by week for a masool's murabis and their saaliks",
+      "GET /v1/reports/monthly": "Sheikh and Admin. Aggregation with filters region/level/progress"
+    },
+    "admin": {
+      "POST /v1/admin/reset-saalik-cycle/:userId": "Admin or Murabi action endpoint to reset cycle (records audit). If Murabi triggers, ensure Murabi is parent of that Saalik.",
+      "POST /v1/admin/rotate-session-key/:sessionId": "Rotate api_session_key"
+    }
+  },
+  "security_model": {
+    "jwt": {
+      "algorithm": "RS256 recommended",
+      "claims": ["sub (userId)", "role", "sessionId", "exp"],
+      "validate": "Signature and expiry on every request"
+    },
+    "api_session_key_and_systemKey": {
+      "session_creation": "At login server creates api_session_key (32+ bytes) and sessionId; store in Redis with TTL",
+      "client_storage": "Client stores api_session_key in memory only; not persisted",
+      "systemKey_generation_on_client": "Encrypt payload containing {sessionId,timestamp,nonce,bodyHash} with server's public RSA key OR compute HMAC_SHA256 using api_session_key and include hex digest as systemKey",
+      "server_validation": [
+        "Extract sessionId from JWT or systemKey payload",
+        "Retrieve api_session_key from Redis using sessionId",
+        "If systemKey was HMAC: server recomputes expected HMAC and constant-time compare",
+        "If systemKey was RSA-encrypted payload: server decrypts with private key and validates timestamp/nonce/bodyHash",
+        "Validate timestamp window (e.g., ±120s) and check nonce uniqueness via Redis SETNX"
+      ],
+      "replay_protection": "Use nonce store in Redis with TTL equal to allowed window; reject duplicate nonce",
+      "rotation": "Rotate api_session_key on refresh or on admin action; invalidate old sessions if needed"
+    },
+    "transport": "HTTPS only; do not accept plaintext HTTP in production"
+  },
+  "scheduled_jobs": {
+    "daily_zikr_check": {
+      "frequency": "daily at configurable time (e.g., 23:59 server time)",
+      "operation": [
+        "For each Saalik with status active: fetch today's entry or last entry",
+        "If today's entry exists and zikrCompleted == false OR today's entry missing: mark as missedZikr",
+        "If user.settings.zikrMode == 'auto_restart': set user.levelStartDate = today; set cycleDays = configured value; create audit log and notify Murabi and Saalik",
+        "If user.settings.zikrMode == 'murabi_controlled': create a flag (user.cycleStatus = 'flagged') and send notification to assigned Murabi for manual reset"
+      ],
+      "scale": "Run aggregation by batching Saaliks (pagination) to avoid large memory spikes"
+    },
+    "nonce_cleanup": {
+      "frequency": "continuous via Redis TTL",
+      "operation": "Nonces stored in Redis expire automatically; no special job required"
+    },
+    "report_generation_job": {
+      "frequency": "weekly (for Masool) and monthly (for Sheikh) - schedule as required",
+      "operation": "Run aggregation pipelines and cache results on disk or in DB for export"
+    }
+  },
+  "validation_and_business_logic": {
+    "on_entry_submission": [
+      "Compute categories.zikrCompleted by checking required zikr fields for that Saalik.level",
+      "If requiredFields not satisfied: return 400 with details",
+      "Compute day_index as diff between date and user.levelStartDate + 1; if day_index > user.cycleDays then mark cycle as completed and set next steps",
+      "If entry's zikrCompleted == false: follow zikr_mandatory_rule (auto restart or flag)"
+    ],
+    "on_level_update_by_murabi": [
+      "Only Murabi assigned to Saalik can update Saalik.level",
+      "When Murabi updates level they may optionally set levelStartDate (if resetting cycle) and cycleDays",
+      "Record audit log and notify Saalik"
+    ]
+  },
+  "indexes_and_performance": {
+    "recommended_indexes": [
+      {"collection": "entries", "index": {"murabiId": 1, "date": -1}},
+      {"collection": "entries", "index": {"userId": 1, "date": 1}},
+      {"collection": "users", "index": {"role": 1, "region": 1}},
+      {"collection": "users", "index": {"murabiId": 1}},
+      {"collection": "entries", "index": {"status": 1, "date": -1}}
+    ],
+    "sharding_consideration": "If scale grows, shard entries by murabiId or userId for balanced distribution"
+  },
+  "sample_documents": {
+    "user_saalik": {
+      "_id": "ObjectId('...')",
+      "name": "Ali",
+      "email": "ali@example.com",
+      "role": "Saalik",
+      "murabiId": "ObjectId('murabi_id')",
+      "level": 1,
+      "levelStartDate": "2025-08-01T00:00:00Z",
+      "cycleDays": 40,
+      "settings": {"zikrMode": "auto_restart", "notificationsEnabled": true},
+      "createdAt": "2025-08-01T00:00:00Z"
+    },
+    "entry_example": {
+      "_id": "ObjectId('...')",
+      "userId": "ObjectId('saalik_id')",
+      "murabiId": "ObjectId('murabi_id')",
+      "date": "2025-09-10",
+      "day_index": 45,
+      "saalik_level": 0,
+      "categories": {"farayz": {"items": [{"label_urdu": "فجر باجماعت", "done": false}]}, "zikr": {"morning": [], "evening": []}},
+      "zikrCompleted": false,
+      "status": "submitted",
+      "createdAt": "2025-09-10T04:00:00Z",
+      "audit": []
+    }
+  },
+  "error_handling": {
+    "http_statuses": {
+      "400": "Bad Request - validation errors returned with field-level messages",
+      "401": "Unauthorized - invalid/expired JWT",
+      "403": "Forbidden - invalid systemKey or insufficient role permission",
+      "404": "Not Found - resource not found or outside caller scope",
+      "409": "Conflict - duplicate entry (userId + date unique constraint)",
+      "429": "Too Many Requests - rate limit exceeded",
+      "500": "Internal Server Error - log details and return generic message"
+    },
+    "logging": "Use structured logs (JSON) with correlation IDs; do not log secrets"
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "JWT verification",
+      "HMAC/RSA systemKey generation & verification",
+      "Level validation logic",
+      "Zikr computation function"
+    ],
+    "integration_tests": [
+      "Full login -> create entry -> murabi review -> level update flows with Redis + Mongo test instances",
+      "Replay attack simulation using duplicate nonces"
+    ],
+    "e2e_tests": "Simulate role-based access across flows (Saalik -> Murabi -> Masool -> Sheikh)"
+  },
+  "deploy_and_ops": {
+    "secrets": [
+      "JWT_PRIVATE_KEY (if RS256) or JWT_SECRET (HS256)",
+      "MONGODB_URI",
+      "REDIS_URL",
+      "HMAC_SECRET (if using symmetric HMAC instead of RSA)"
+    ],
+    "monitoring": ["Sentry (errors)", "Prometheus/Grafana (metrics)"],
+    "backups": "Use MongoDB Atlas automated snapshots"
+  },
+  "next_steps_and_delivery": {
+    "week_1": [
+      "Implement users collection, creation rules and role enforcement",
+      "Implement auth/login with session creation and api_session_key stored in Redis"
+    ],
+    "week_2": [
+      "Implement entries endpoints, server-side validation and day_index calculation",
+      "Implement Murabi create/update endpoints and audit trails"
+    ],
+    "week_3": [
+      "Implement scheduled daily_zikr_check job and notification flows",
+      "Implement reports aggregation endpoints for Masool/Sheikh"
+    ],
+    "week_4": [
+      "Testing, performance tuning, and deployment to staging"
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "a07f1f77bcf86cd799439023",
+    "user_id": "507f1f77bcf86cd799439014",
+    "action": "login",
+    "resource_type": "auth",
+    "resource_id": null,
+    "details": {
+      "ip_address": "192.168.1.100",
+      "user_agent": "Chrome/120.0.0.0"
+    },
+    "timestamp": "2024-01-15T09:00:00Z"
+  },
+  {
+    "_id": "a07f1f77bcf86cd799439024",
+    "user_id": "507f1f77bcf86cd799439014",
+    "action": "create",
+    "resource_type": "entry",
+    "resource_id": "607f1f77bcf86cd799439016",
+    "details": {
+      "date": "2024-01-15",
+      "zikr_completed": true
+    },
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  {
+    "user_id": null,
+    "action": "login_failed",
+    "resource_type": "authentication",
+    "resource_id": null,
+    "details": {
+      "phone_or_email": "test@example.com",
+      "reason": "User not found",
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.6584",
+      "method": "POST",
+      "endpoint": "auth.login",
+      "url": "http://127.0.0.1:5000/v1/auth/login"
+    },
+    "ip_address": null,
+    "user_agent": null,
+    "timestamp": "2025-09-24 15:28:12.681378",
+    "_id": "3bed20b9fe634ff281a47d12",
+    "created_at": "2025-09-24T15:28:12.681620Z",
+    "updated_at": "2025-09-24T15:28:12.681620Z"
+  }
+]

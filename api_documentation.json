@@ -1,0 +1,1149 @@
+{
+  "api_documentation": {
+    "base_url": "http://localhost:5000/api/v1",
+    "authentication": {
+      "type": "Bearer Token",
+      "header": "Authorization: Bearer <jwt_token>",
+      "note": "Most endpoints require authentication except login and some public endpoints"
+    },
+    "response_format": {
+      "success": true,
+      "message": "Operation completed successfully",
+      "data": {},
+      "timestamp": "2024-01-15T10:30:00Z"
+    },
+    "endpoints": {
+      "authentication": {
+        "login": {
+          "method": "POST",
+          "endpoint": "/auth/login",
+          "description": "User login with phone/email and password",
+          "authentication_required": false,
+          "payload": {
+            "identifier": "+923001234567 or user@example.com",
+            "password": "UserPassword123!"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Login successful",
+            "data": {
+              "user": {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "phone": "+923001234567",
+                "email": "john@example.com",
+                "role": "Saalik",
+                "level": 2,
+                "is_active": true,
+                "created_at": "2024-01-01T00:00:00Z"
+              },
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+              "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+              "expires_in": 3600
+            }
+          }
+        },
+        "logout": {
+          "method": "POST",
+          "endpoint": "/auth/logout",
+          "description": "Logout current session",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Logged out successfully",
+            "data": {}
+          }
+        },
+        "logout_all": {
+          "method": "POST",
+          "endpoint": "/auth/logout-all",
+          "description": "Logout all user sessions",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "All sessions logged out successfully",
+            "data": {
+              "revoked_sessions": 3
+            }
+          }
+        },
+        "refresh_token": {
+          "method": "POST",
+          "endpoint": "/auth/refresh",
+          "description": "Refresh JWT access token",
+          "authentication_required": true,
+          "payload": {
+            "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
+          "response_example": {
+            "success": true,
+            "message": "Token refreshed successfully",
+            "data": {
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+              "expires_in": 3600
+            }
+          }
+        },
+        "current_user": {
+          "method": "GET",
+          "endpoint": "/auth/me",
+          "description": "Get current user information",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "User information retrieved successfully",
+            "data": {
+              "user": {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "phone": "+923001234567",
+                "email": "john@example.com",
+                "role": "Saalik",
+                "level": 2,
+                "level_start_date": "2024-01-01",
+                "murabi_id": "507f1f77bcf86cd799439012",
+                "is_active": true,
+                "created_at": "2024-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        "list_sessions": {
+          "method": "GET",
+          "endpoint": "/auth/sessions",
+          "description": "List user's active sessions",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Sessions retrieved successfully",
+            "data": {
+              "sessions": [
+                {
+                  "_id": "507f1f77bcf86cd799439013",
+                  "device_info": "Chrome on Windows",
+                  "ip_address": "192.168.1.100",
+                  "last_activity": "2024-01-15T10:30:00Z",
+                  "is_current": true
+                }
+              ]
+            }
+          }
+        },
+        "revoke_session": {
+          "method": "DELETE",
+          "endpoint": "/auth/sessions/<session_id>",
+          "description": "Revoke specific session",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Session revoked successfully",
+            "data": {}
+          }
+        },
+        "change_password": {
+          "method": "POST",
+          "endpoint": "/auth/change-password",
+          "description": "Change user password",
+          "authentication_required": true,
+          "payload": {
+            "current_password": "OldPassword123!",
+            "new_password": "NewPassword123!"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Password changed successfully",
+            "data": {}
+          }
+        },
+        "verify_token": {
+          "method": "POST",
+          "endpoint": "/auth/verify",
+          "description": "Verify JWT token validity",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Token is valid",
+            "data": {
+              "valid": true,
+              "expires_at": "2024-01-15T11:30:00Z"
+            }
+          }
+        }
+      },
+      "users": {
+        "create_user": {
+          "method": "POST",
+          "endpoint": "/users",
+          "description": "Create new user (role-based restrictions apply)",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
+          "payload": {
+            "name": "Jane Doe",
+            "phone": "+923001234568",
+            "email": "jane@example.com",
+            "password": "UserPassword123!",
+            "role": "Saalik",
+            "level": 0,
+            "murabi_id": "507f1f77bcf86cd799439012"
+          },
+          "response_example": {
+            "success": true,
+            "message": "User created successfully",
+            "data": {
+              "user": {
+                "_id": "507f1f77bcf86cd799439014",
+                "name": "Jane Doe",
+                "phone": "+923001234568",
+                "email": "jane@example.com",
+                "role": "Saalik",
+                "level": 0,
+                "murabi_id": "507f1f77bcf86cd799439012",
+                "is_active": true,
+                "created_at": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "list_users": {
+          "method": "GET",
+          "endpoint": "/users",
+          "description": "List users based on role and hierarchy",
+          "authentication_required": true,
+          "query_parameters": {
+            "page": 1,
+            "limit": 50,
+            "role": "Saalik",
+            "level": 2,
+            "is_active": true,
+            "search": "john"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Users retrieved successfully",
+            "data": {
+              "users": [
+                {
+                  "_id": "507f1f77bcf86cd799439011",
+                  "name": "John Doe",
+                  "phone": "+923001234567",
+                  "email": "john@example.com",
+                  "role": "Saalik",
+                  "level": 2,
+                  "is_active": true,
+                  "created_at": "2024-01-01T00:00:00Z"
+                }
+              ],
+              "pagination": {
+                "page": 1,
+                "limit": 50,
+                "total": 1,
+                "pages": 1
+              }
+            }
+          }
+        },
+        "get_user": {
+          "method": "GET",
+          "endpoint": "/users/<user_id>",
+          "description": "Get specific user details",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "User retrieved successfully",
+            "data": {
+              "user": {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "phone": "+923001234567",
+                "email": "john@example.com",
+                "role": "Saalik",
+                "level": 2,
+                "level_start_date": "2024-01-01",
+                "murabi_id": "507f1f77bcf86cd799439012",
+                "is_active": true,
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "update_user": {
+          "method": "PUT",
+          "endpoint": "/users/<user_id>",
+          "description": "Update user information",
+          "authentication_required": true,
+          "payload": {
+            "name": "John Smith",
+            "email": "johnsmith@example.com",
+            "level": 3
+          },
+          "response_example": {
+            "success": true,
+            "message": "User updated successfully",
+            "data": {
+              "user": {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Smith",
+                "phone": "+923001234567",
+                "email": "johnsmith@example.com",
+                "role": "Saalik",
+                "level": 3,
+                "updated_at": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "reset_user_cycle": {
+          "method": "POST",
+          "endpoint": "/users/<user_id>/reset-cycle",
+          "description": "Reset user's spiritual cycle",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool"],
+          "payload": {
+            "reset_date": "2024-01-15",
+            "reason": "Level progression"
+          },
+          "response_example": {
+            "success": true,
+            "message": "User cycle reset successfully",
+            "data": {
+              "old_start_date": "2024-01-01",
+              "new_start_date": "2024-01-15"
+            }
+          }
+        },
+        "deactivate_user": {
+          "method": "POST",
+          "endpoint": "/users/<user_id>/deactivate",
+          "description": "Deactivate user account",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool"],
+          "payload": {
+            "reason": "Inactive for extended period"
+          },
+          "response_example": {
+            "success": true,
+            "message": "User deactivated successfully",
+            "data": {}
+          }
+        },
+        "activate_user": {
+          "method": "POST",
+          "endpoint": "/users/<user_id>/activate",
+          "description": "Activate user account",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool"],
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "User activated successfully",
+            "data": {}
+          }
+        }
+      },
+      "entries": {
+        "create_entry": {
+          "method": "POST",
+          "endpoint": "/entries",
+          "description": "Create or update daily entry",
+          "authentication_required": true,
+          "required_roles": ["Saalik"],
+          "payload": {
+            "date": "2024-01-15",
+            "data": {
+              "kalma": 100,
+              "darood": 100,
+              "istighfar": 100,
+              "tasbihat": 100,
+              "fikr_e_maut": true,
+              "muraqaba": 30,
+              "tilawat": 1,
+              "tahajjud": true
+            }
+          },
+          "response_example": {
+            "success": true,
+            "message": "Entry saved successfully",
+            "data": {
+              "entry": {
+                "_id": "507f1f77bcf86cd799439015",
+                "user_id": "507f1f77bcf86cd799439011",
+                "date": "2024-01-15",
+                "data": {
+                  "kalma": 100,
+                  "darood": 100,
+                  "istighfar": 100,
+                  "tasbihat": 100,
+                  "fikr_e_maut": true,
+                  "muraqaba": 30,
+                  "tilawat": 1,
+                  "tahajjud": true
+                },
+                "zikr_completed": true,
+                "cycle_day": 15,
+                "created_at": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "list_entries": {
+          "method": "GET",
+          "endpoint": "/entries",
+          "description": "List entries based on role and hierarchy",
+          "authentication_required": true,
+          "query_parameters": {
+            "page": 1,
+            "limit": 50,
+            "user_id": "507f1f77bcf86cd799439011",
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+            "zikr_completed": true
+          },
+          "response_example": {
+            "success": true,
+            "message": "Entries retrieved successfully",
+            "data": {
+              "entries": [
+                {
+                  "_id": "507f1f77bcf86cd799439015",
+                  "user_id": "507f1f77bcf86cd799439011",
+                  "user_name": "John Doe",
+                  "date": "2024-01-15",
+                  "data": {
+                    "kalma": 100,
+                    "darood": 100,
+                    "istighfar": 100
+                  },
+                  "zikr_completed": true,
+                  "cycle_day": 15,
+                  "created_at": "2024-01-15T10:30:00Z"
+                }
+              ],
+              "pagination": {
+                "page": 1,
+                "limit": 50,
+                "total": 1,
+                "pages": 1
+              }
+            }
+          }
+        },
+        "get_entry": {
+          "method": "GET",
+          "endpoint": "/entries/<entry_id>",
+          "description": "Get specific entry details",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Entry retrieved successfully",
+            "data": {
+              "entry": {
+                "_id": "507f1f77bcf86cd799439015",
+                "user_id": "507f1f77bcf86cd799439011",
+                "user_name": "John Doe",
+                "date": "2024-01-15",
+                "data": {
+                  "kalma": 100,
+                  "darood": 100,
+                  "istighfar": 100,
+                  "tasbihat": 100,
+                  "fikr_e_maut": true,
+                  "muraqaba": 30,
+                  "tilawat": 1,
+                  "tahajjud": true
+                },
+                "zikr_completed": true,
+                "cycle_day": 15,
+                "comments": [],
+                "created_at": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "add_comment": {
+          "method": "POST",
+          "endpoint": "/entries/<entry_id>/comment",
+          "description": "Add comment to entry",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
+          "payload": {
+            "comment": "Good progress, keep it up!"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Comment added successfully",
+            "data": {
+              "comment": {
+                "user_id": "507f1f77bcf86cd799439012",
+                "user_name": "Murabi Name",
+                "comment": "Good progress, keep it up!",
+                "timestamp": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "get_summary": {
+          "method": "GET",
+          "endpoint": "/entries/summary",
+          "description": "Get entry summary for user",
+          "authentication_required": true,
+          "query_parameters": {
+            "user_id": "507f1f77bcf86cd799439011",
+            "period": "week",
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Summary retrieved successfully",
+            "data": {
+              "summary": {
+                "period": "week",
+                "start_date": "2024-01-08",
+                "end_date": "2024-01-14",
+                "total_entries": 7,
+                "zikr_completion_rate": 85.7,
+                "average_scores": {
+                  "kalma": 95.0,
+                  "darood": 98.0,
+                  "istighfar": 92.0
+                },
+                "streak": {
+                  "current": 5,
+                  "longest": 12
+                }
+              }
+            }
+          }
+        },
+        "delete_entry": {
+          "method": "DELETE",
+          "endpoint": "/entries/<entry_id>",
+          "description": "Delete entry (admin/masool/sheikh only)",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool"],
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Entry deleted successfully",
+            "data": {}
+          }
+        }
+      },
+      "reports": {
+        "weekly_report": {
+          "method": "GET",
+          "endpoint": "/reports/weekly",
+          "description": "Generate weekly reports",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
+          "query_parameters": {
+            "user_id": "507f1f77bcf86cd799439011",
+            "week_offset": 0
+          },
+          "response_example": {
+            "success": true,
+            "message": "Weekly report generated successfully",
+            "data": {
+              "report": {
+                "period": "week",
+                "start_date": "2024-01-08",
+                "end_date": "2024-01-14",
+                "overall_stats": {
+                  "total_entries": 45,
+                  "total_users": 10,
+                  "completion_rate": 64.3
+                },
+                "user_stats": [
+                  {
+                    "user_id": "507f1f77bcf86cd799439011",
+                    "name": "John Doe",
+                    "entries": 6,
+                    "completion_rate": 85.7,
+                    "zikr_completed": 5
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "monthly_report": {
+          "method": "GET",
+          "endpoint": "/reports/monthly",
+          "description": "Generate monthly reports",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool"],
+          "query_parameters": {
+            "user_id": "507f1f77bcf86cd799439011",
+            "year": 2024,
+            "month": 1
+          },
+          "response_example": {
+            "success": true,
+            "message": "Monthly report generated successfully",
+            "data": {
+              "report": {
+                "period": "month",
+                "year": 2024,
+                "month": 1,
+                "overall_stats": {
+                  "total_entries": 180,
+                  "total_users": 10,
+                  "completion_rate": 58.1
+                },
+                "weekly_breakdown": [
+                  {
+                    "week": 1,
+                    "entries": 45,
+                    "completion_rate": 64.3
+                  }
+                ],
+                "level_distribution": {
+                  "0": 2,
+                  "1": 3,
+                  "2": 3,
+                  "3": 2
+                },
+                "murabi_performance": [
+                  {
+                    "murabi_id": "507f1f77bcf86cd799439012",
+                    "name": "Murabi Name",
+                    "saalik_count": 5,
+                    "avg_completion_rate": 72.5
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "custom_report": {
+          "method": "GET",
+          "endpoint": "/reports/custom",
+          "description": "Generate custom period reports",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
+          "query_parameters": {
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+            "user_id": "507f1f77bcf86cd799439011",
+            "group_by": "user"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Custom report generated successfully",
+            "data": {
+              "report": {
+                "period": "custom",
+                "start_date": "2024-01-01",
+                "end_date": "2024-01-31",
+                "group_by": "user",
+                "data": [
+                  {
+                    "user_id": "507f1f77bcf86cd799439011",
+                    "name": "John Doe",
+                    "total_entries": 25,
+                    "completion_rate": 80.6,
+                    "average_scores": {
+                      "kalma": 95.0,
+                      "darood": 98.0
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "analytics_report": {
+          "method": "GET",
+          "endpoint": "/reports/analytics",
+          "description": "Generate advanced analytics reports",
+          "authentication_required": true,
+          "required_roles": ["Admin", "Sheikh"],
+          "query_parameters": {
+            "period": "month"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Analytics report generated successfully",
+            "data": {
+              "analytics": {
+                "period": "month",
+                "user_statistics": {
+                  "total_users": 50,
+                  "active_users": 42,
+                  "role_distribution": {
+                    "Saalik": 40,
+                    "Murabi": 8,
+                    "Masool": 2
+                  },
+                  "level_distribution": {
+                    "0": 8,
+                    "1": 10,
+                    "2": 12,
+                    "3": 6,
+                    "4": 3,
+                    "5": 1,
+                    "6": 0
+                  }
+                },
+                "performance_metrics": {
+                  "overall_completion_rate": 68.5,
+                  "top_performers": [
+                    {
+                      "user_id": "507f1f77bcf86cd799439011",
+                      "name": "John Doe",
+                      "completion_rate": 95.2
+                    }
+                  ],
+                  "bottom_performers": [
+                    {
+                      "user_id": "507f1f77bcf86cd799439016",
+                      "name": "Jane Smith",
+                      "completion_rate": 25.8
+                    }
+                  ]
+                },
+                "murabi_effectiveness": [
+                  {
+                    "murabi_id": "507f1f77bcf86cd799439012",
+                    "name": "Murabi Name",
+                    "saalik_count": 8,
+                    "avg_completion_rate": 78.5,
+                    "effectiveness_score": 85.2
+                  }
+                ],
+                "system_health": {
+                  "total_entries": 1250,
+                  "entries_per_day": 40.3,
+                  "violation_rate": 5.2
+                }
+              }
+            }
+          }
+        }
+      },
+      "admin": {
+        "system_status": {
+          "method": "GET",
+          "endpoint": "/admin/system/status",
+          "description": "Get system status and health metrics",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "System status retrieved successfully",
+            "data": {
+              "system_health": {
+                "score": 85,
+                "status": "healthy"
+              },
+              "user_statistics": {
+                "total_users": 50,
+                "active_users": 42,
+                "recent_registrations": 3,
+                "role_distribution": {
+                  "Admin": 1,
+                  "Sheikh": 1,
+                  "Masool": 2,
+                  "Murabi": 8,
+                  "Saalik": 38
+                },
+                "level_distribution": {
+                  "Level 0": 8,
+                  "Level 1": 10,
+                  "Level 2": 12,
+                  "Level 3": 6,
+                  "Level 4": 2,
+                  "Level 5": 0,
+                  "Level 6": 0
+                }
+              },
+              "entry_statistics": {
+                "total_entries": 1250,
+                "recent_entries": 280,
+                "daily_average": 40.0
+              },
+              "session_statistics": {
+                "active_sessions": 25,
+                "expired_sessions": 5
+              },
+              "notification_statistics": {
+                "unread_notifications": 15
+              }
+            }
+          }
+        },
+        "bulk_cycle_reset": {
+          "method": "POST",
+          "endpoint": "/admin/users/bulk-cycle-reset",
+          "description": "Reset cycles for multiple users",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "user_ids": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439014"],
+            "reset_date": "2024-01-15",
+            "reason": "Monthly reset"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Bulk cycle reset completed. 2 users reset successfully",
+            "data": {
+              "successful_resets": 2,
+              "failed_resets": [],
+              "reset_date": "2024-01-15"
+            }
+          }
+        },
+        "bulk_level_update": {
+          "method": "POST",
+          "endpoint": "/admin/users/bulk-level-update",
+          "description": "Update levels for multiple users",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "updates": [
+              {
+                "user_id": "507f1f77bcf86cd799439011",
+                "new_level": 3
+              },
+              {
+                "user_id": "507f1f77bcf86cd799439014",
+                "new_level": 1
+              }
+            ],
+            "reason": "Level progression assessment"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Bulk level update completed. 2 users updated successfully",
+            "data": {
+              "successful_updates": 2,
+              "failed_updates": []
+            }
+          }
+        },
+        "system_cleanup": {
+          "method": "POST",
+          "endpoint": "/admin/system/cleanup",
+          "description": "Perform system cleanup operations",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "operations": ["expired_sessions", "old_audit_logs", "expired_notifications"],
+            "days_to_keep": 90
+          },
+          "response_example": {
+            "success": true,
+            "message": "System cleanup completed successfully",
+            "data": {
+              "expired_sessions": 15,
+              "old_audit_logs": 250,
+              "expired_notifications": 8
+            }
+          }
+        },
+        "create_backup": {
+          "method": "POST",
+          "endpoint": "/admin/system/backup",
+          "description": "Create system backup metadata",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Backup initiated successfully. Please use external backup tools for actual data backup.",
+            "data": {
+              "backup_id": "507f1f77bcf86cd799439017",
+              "created_at": "2024-01-15T10:30:00Z",
+              "created_by": {
+                "user_id": "507f1f77bcf86cd799439001",
+                "name": "Admin User"
+              },
+              "statistics": {
+                "total_users": 50,
+                "total_entries": 1250,
+                "total_sessions": 30,
+                "total_notifications": 25,
+                "total_audit_logs": 500
+              },
+              "status": "initiated"
+            }
+          }
+        },
+        "force_logout": {
+          "method": "POST",
+          "endpoint": "/admin/users/force-logout",
+          "description": "Force logout specific users or all users",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "user_ids": ["507f1f77bcf86cd799439011"],
+            "reason": "Security maintenance"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Force logout completed. 1 users logged out successfully",
+            "data": {
+              "successful_logouts": 1,
+              "failed_logouts": []
+            }
+          }
+        },
+        "broadcast_notification": {
+          "method": "POST",
+          "endpoint": "/admin/system/notifications/broadcast",
+          "description": "Send notification to all users or specific groups",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "title": "System Maintenance",
+            "message": "System will be under maintenance from 2 AM to 4 AM",
+            "type": "system",
+            "priority": "high",
+            "target_roles": ["Saalik", "Murabi"],
+            "target_levels": [2, 3],
+            "action_url": "/maintenance",
+            "expires_in_days": 7
+          },
+          "response_example": {
+            "success": true,
+            "message": "Broadcast notification sent successfully to 25 users",
+            "data": {
+              "total_recipients": 25,
+              "successful_sends": 25,
+              "failed_sends": 0
+            }
+          }
+        },
+        "create_api_key": {
+          "method": "POST",
+          "endpoint": "/admin/system/api-keys",
+          "description": "Create new API key for system integration",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "payload": {
+            "name": "Mobile App Integration",
+            "description": "API key for mobile application",
+            "expires_in_days": 365
+          },
+          "response_example": {
+            "success": true,
+            "message": "API key created successfully",
+            "data": {
+              "key_id": "507f1f77bcf86cd799439018",
+              "name": "Mobile App Integration",
+              "description": "API key for mobile application",
+              "api_key": "ak_1234567890abcdef1234567890abcdef",
+              "created_by": "507f1f77bcf86cd799439001",
+              "created_at": "2024-01-15T10:30:00Z",
+              "expires_at": "2025-01-15T10:30:00Z",
+              "is_active": true
+            }
+          }
+        },
+        "get_audit_logs": {
+          "method": "GET",
+          "endpoint": "/admin/audit-logs",
+          "description": "Get system audit logs with filtering",
+          "authentication_required": true,
+          "required_roles": ["Admin"],
+          "query_parameters": {
+            "page": 1,
+            "limit": 50,
+            "user_id": "507f1f77bcf86cd799439011",
+            "action": "login",
+            "resource_type": "user",
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Audit logs retrieved successfully",
+            "data": {
+              "logs": [
+                {
+                  "_id": "507f1f77bcf86cd799439019",
+                  "user_id": "507f1f77bcf86cd799439011",
+                  "action": "login",
+                  "resource_type": "user",
+                  "resource_id": "507f1f77bcf86cd799439011",
+                  "old_values": null,
+                  "new_values": null,
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0...",
+                  "session_id": "507f1f77bcf86cd799439013",
+                  "metadata": {
+                    "login_method": "password"
+                  },
+                  "timestamp": "2024-01-15T10:30:00Z"
+                }
+              ],
+              "pagination": {
+                "page": 1,
+                "limit": 50,
+                "total": 1,
+                "pages": 1
+              }
+            }
+          }
+        }
+      },
+      "levels": {
+        "get_levels": {
+          "method": "GET",
+          "endpoint": "/levels",
+          "description": "Get all Saalik levels with requirements",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Levels retrieved successfully",
+            "data": {
+              "levels": [
+                {
+                  "_id": "507f1f77bcf86cd79943901a",
+                  "level": 0,
+                  "urdu_name": "بنیادی سطح",
+                  "description": "کلمہ، درود، استغفار کی بنیادی مشق",
+                  "required_fields": ["kalma", "darood", "istighfar"],
+                  "created_at": "2024-01-01T00:00:00Z"
+                },
+                {
+                  "_id": "507f1f77bcf86cd79943901b",
+                  "level": 1,
+                  "urdu_name": "پہلی سطح",
+                  "description": "بنیادی مشق کے ساتھ تسبیحات کا اضافہ",
+                  "required_fields": ["kalma", "darood", "istighfar", "tasbihat"],
+                  "created_at": "2024-01-01T00:00:00Z"
+                }
+              ]
+            }
+          }
+        },
+        "get_level": {
+          "method": "GET",
+          "endpoint": "/levels/<level_number>",
+          "description": "Get specific level details",
+          "authentication_required": true,
+          "payload": {},
+          "response_example": {
+            "success": true,
+            "message": "Level retrieved successfully",
+            "data": {
+              "level": {
+                "_id": "507f1f77bcf86cd79943901a",
+                "level": 0,
+                "urdu_name": "بنیادی سطح",
+                "description": "کلمہ، درود، استغفار کی بنیادی مشق",
+                "required_fields": ["kalma", "darood", "istighfar"],
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z"
+              }
+            }
+          }
+        }
+      }
+    },
+    "error_responses": {
+      "400_bad_request": {
+        "success": false,
+        "message": "Invalid request data",
+        "error": "Validation failed",
+        "details": {
+          "field": "email",
+          "message": "Invalid email format"
+        }
+      },
+      "401_unauthorized": {
+        "success": false,
+        "message": "Authentication required",
+        "error": "Missing or invalid token"
+      },
+      "403_forbidden": {
+        "success": false,
+        "message": "Access denied",
+        "error": "Insufficient permissions"
+      },
+      "404_not_found": {
+        "success": false,
+        "message": "Resource not found",
+        "error": "User not found"
+      },
+      "429_rate_limit": {
+        "success": false,
+        "message": "Rate limit exceeded",
+        "error": "Too many requests"
+      },
+      "500_server_error": {
+        "success": false,
+        "message": "Internal server error",
+        "error": "Database connection failed"
+      }
+    },
+    "rate_limits": {
+      "authentication": "10 requests per minute",
+      "general_api": "100 requests per minute",
+      "reports": "20 requests per minute",
+      "admin_operations": "30 requests per minute"
+    },
+    "data_validation": {
+      "saalik_levels": {
+        "0": {
+          "required_fields": ["kalma", "darood", "istighfar"],
+          "optional_fields": []
+        },
+        "1": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat"],
+          "optional_fields": []
+        },
+        "2": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut"],
+          "optional_fields": []
+        },
+        "3": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba"],
+          "optional_fields": []
+        },
+        "4": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat"],
+          "optional_fields": []
+        },
+        "5": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat", "tahajjud"],
+          "optional_fields": []
+        },
+        "6": {
+          "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat", "tahajjud"],
+          "optional_fields": []
+        }
+      },
+      "field_types": {
+        "kalma": "integer (count)",
+        "darood": "integer (count)",
+        "istighfar": "integer (count)",
+        "tasbihat": "integer (count)",
+        "fikr_e_maut": "boolean",
+        "muraqaba": "integer (minutes)",
+        "tilawat": "integer (pages/paras)",
+        "tahajjud": "boolean"
+      },
+      "field_ranges": {
+        "kalma": "0-1000",
+        "darood": "0-1000",
+        "istighfar": "0-1000",
+        "tasbihat": "0-1000",
+        "muraqaba": "0-120",
+        "tilawat": "0-30"
+      }
+    }
+  }
+}

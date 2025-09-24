@@ -1,0 +1,239 @@
+{
+    "project": "Tasbiaat & Mamolaat Web App",
+    "frontend": "Next.js (responsive, role-based dashboards)",
+    "backend": "Flask REST API with JWT authentication",
+    "database": "MongoDB Atlas",
+    "roles": [
+        "Saalik",
+        "Murabi",
+        "Masool",
+        "Sheikh",
+        "Admin"
+    ],
+    "features": [
+        "Role-based login and dashboards",
+        "Saalik daily input with conditional fields based on level",
+        "Murabi review, comments, and Saalik level updates",
+        "Masool weekly summaries (aggregation reports)",
+        "Sheikh monthly reports with filters and export",
+        "Notifications/reminders for Saalik",
+        "Admin: manage users and regions"
+    ],
+    "security": {
+        "jwt_auth": "Access + Refresh tokens",
+        "api_security_key": "Custom header token (X-System-Key) to validate system-to-system API calls",
+        "rate_limit": "Limit sensitive endpoints",
+        "db_security": "Atlas IP whitelist, role-based DB users"
+    },
+    "saalik_levels": [
+        {
+            "level": 0,
+            "name_urdu": "ابتدائی",
+            "description": "قائم تعلق اصلاحی یا بیعت ابھی آغاز کا معمولات کیا۔ کیا نہیں ہوا۔ نہیں"
+        },
+        {
+            "level": 1,
+            "name_urdu": "معمولات ابتدائی",
+            "description": "اور اذکار تسبیحات، مرد روز بنیادی جسمی پابندی کی نمازوں اعمال۔ اور موت، مراقبہ ذکر، آواز بلند آغاز کا تعاملات"
+        },
+        {
+            "level": 2,
+            "name_urdu": "بالجبر ذکر",
+            "description": "مراقبہ دلیلی، ذکر کا سانسوں عمل، کا حضوری کی دل اور"
+        },
+        {
+            "level": 3,
+            "name_urdu": "الفاس پاس",
+            "description": "کی (اللہ معیت مشق) کی لطائف (اللہ صفاتی احساس)، کا برادری (رجوع) مکمل طرف کی"
+        },
+        {
+            "level": 4,
+            "name_urdu": "لطائف",
+            "description": "کرتے فکر، و ذکر کا سطح اعلی، مقامات روحانی"
+        },
+        {
+            "level": 5,
+            "name_urdu": "الاذکار سلطان",
+            "description": "اور مراقبے ترین اعلی کی توحید سفر کا فنا مکمل سالک کے اللہ"
+        },
+        {
+            "level": 6,
+            "name_urdu": "اثبات نفی",
+            "description": "اعلی ترین مراقبے اور ذکر کی انتہا"
+        }
+    ],
+    "category_mapping": {
+        "farayz": "Farā'iz (Obligatory Prayers)",
+        "quran_tilawat": "Quran Recitation",
+        "zikr": "Zikr (Remembrance)",
+        "nawafil": "Nawafil (Optional Prayers)",
+        "hifazat": "Protections / Guarding",
+        "sleep_wake": "Sleep & Wake Times"
+    },
+    "initial_entry_example": {
+        "userId": "USER_ID_PLACEHOLDER",
+        "date": "2025-09-10",
+        "day_index": 45,
+        "saalik_level": 0,
+        "categories": {
+            "farayz": {
+                "label_urdu": "فرائض",
+                "items": [
+                    {
+                        "label_urdu": "فجر باجماعت",
+                        "done": false
+                    },
+                    {
+                        "label_urdu": "ظہر باجماعت",
+                        "done": false
+                    },
+                    {
+                        "label_urdu": "عصر باجماعت",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "مغرب باجماعت",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "عشاء باجماعت",
+                        "done": true
+                    }
+                ]
+            },
+            "quran_tilawat": {
+                "label_urdu": "قرآن تلاوت",
+                "items": [
+                    {
+                        "label_urdu": "سورہ یاسین",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "سورہ واقعہ",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "سورہ ملک",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "ادھا پارہ تلاوت",
+                        "done": false
+                    }
+                ]
+            },
+            "zikr": {
+                "label_urdu": "ذکر",
+                "morning": [
+                    {
+                        "label_urdu": "100 استغفار",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 درود شریف",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 تیسرا کلمہ",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 پہلا کلمہ",
+                        "done": true
+                    }
+                ],
+                "evening": [
+                    {
+                        "label_urdu": "100 استغفار",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 درود شریف",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 تیسرا کلمہ",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "100 پہلا کلمہ",
+                        "done": true
+                    }
+                ]
+            },
+            "nawafil": {
+                "label_urdu": "نوافل",
+                "items": [
+                    {
+                        "label_urdu": "تہجد",
+                        "done": false
+                    },
+                    {
+                        "label_urdu": "اشراق",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "چاشت",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "اوابین",
+                        "done": false
+                    },
+                    {
+                        "label_urdu": "جمعہ کو صلاة التسبیح",
+                        "done": false
+                    }
+                ]
+            },
+            "hifazat": {
+                "label_urdu": "حفاظت کرنے کی چیزیں",
+                "items": [
+                    {
+                        "label_urdu": "نظر کی حفاظت",
+                        "done": false
+                    },
+                    {
+                        "label_urdu": "زبان کی حفاظت",
+                        "done": true
+                    },
+                    {
+                        "label_urdu": "کان کی حفاظت",
+                        "done": false
+                    }
+                ]
+            },
+            "sleep_wake": {
+                "label_urdu": "سونے اور جاگنے کا وقت",
+                "sleep_time": "11:35",
+                "wake_time": "05:50"
+            }
+        },
+        "status": "submitted",
+        "system_key": "SYSTEM_KEY_PLACEHOLDER"
+    },
+    "api_endpoints": {
+        "auth": {
+            "login": "POST /v1/auth/login",
+            "refresh": "POST /v1/auth/refresh",
+            "logout": "POST /v1/auth/logout"
+        },
+        "entries": {
+            "create_entry": "POST /v1/entries",
+            "get_entries": "GET /v1/entries?userId=&date=&status=",
+            "update_entry": "PATCH /v1/entries/:id",
+            "comment_entry": "POST /v1/entries/:id/comment",
+            "update_level": "PATCH /v1/entries/:id/level"
+        },
+        "reports": {
+            "weekly": "GET /v1/reports/weekly?region=&start=&end=",
+            "monthly": "GET /v1/reports/monthly?region=&level=&start=&end="
+        },
+        "notifications": {
+            "subscribe": "POST /v1/notifications/subscribe",
+            "test": "POST /v1/notifications/test"
+        },
+        "levels": "GET /v1/levels",
+        "regions": "GET /v1/regions"
+    }
+}

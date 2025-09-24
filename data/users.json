@@ -1,0 +1,72 @@
+[
+  {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "Admin User",
+    "phone": "+923001234567",
+    "email": "admin@tasbiaat.com",
+    "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uDjO",
+    "role": "Admin",
+    "level": null,
+    "level_start_date": null,
+    "murabi_id": null,
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439012",
+    "name": "Sheikh Ahmad",
+    "phone": "+923001234568",
+    "email": "sheikh@tasbiaat.com",
+    "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uDjO",
+    "role": "Sheikh",
+    "level": null,
+    "level_start_date": null,
+    "murabi_id": null,
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439013",
+    "name": "Murabi Ali",
+    "phone": "+923001234569",
+    "email": "murabi@tasbiaat.com",
+    "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uDjO",
+    "role": "Murabi",
+    "level": null,
+    "level_start_date": null,
+    "murabi_id": "507f1f77bcf86cd799439012",
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439014",
+    "name": "John Doe",
+    "phone": "+923001234570",
+    "email": "john@example.com",
+    "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uDjO",
+    "role": "Saalik",
+    "level": 2,
+    "level_start_date": "2024-01-01",
+    "murabi_id": "507f1f77bcf86cd799439013",
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439015",
+    "name": "Jane Smith",
+    "phone": "+923001234571",
+    "email": "jane@example.com",
+    "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uDjO",
+    "role": "Saalik",
+    "level": 0,
+    "level_start_date": "2024-01-10",
+    "murabi_id": "507f1f77bcf86cd799439013",
+    "is_active": false,
+    "created_at": "2024-01-10T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+]

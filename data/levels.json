@@ -1,0 +1,65 @@
+[
+  {
+    "_id": "707f1f77bcf86cd799439018",
+    "level": 0,
+    "urdu_name": "بنیادی سطح",
+    "description": "کلمہ، درود، استغفار کی بنیادی مشق",
+    "required_fields": ["kalma", "darood", "istighfar"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd799439019",
+    "level": 1,
+    "urdu_name": "پہلی سطح",
+    "description": "بنیادی مشق کے ساتھ تسبیحات کا اضافہ",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd79943901a",
+    "level": 2,
+    "urdu_name": "دوسری سطح",
+    "description": "فکر موت کے ساتھ مکمل بنیادی مشق",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd79943901b",
+    "level": 3,
+    "urdu_name": "تیسری سطح",
+    "description": "مراقبہ کے ساتھ مکمل مشق",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd79943901c",
+    "level": 4,
+    "urdu_name": "چوتھی سطح",
+    "description": "تلاوت کے ساتھ مکمل مشق",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd79943901d",
+    "level": 5,
+    "urdu_name": "پانچویں سطح",
+    "description": "تہجد کے ساتھ مکمل مشق",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat", "tahajjud"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "707f1f77bcf86cd79943901e",
+    "level": 6,
+    "urdu_name": "چھٹی سطح",
+    "description": "مکمل روحانی مشق",
+    "required_fields": ["kalma", "darood", "istighfar", "tasbihat", "fikr_e_maut", "muraqaba", "tilawat", "tahajjud"],
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+]

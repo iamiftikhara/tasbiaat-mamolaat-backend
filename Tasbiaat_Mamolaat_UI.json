@@ -1,0 +1,181 @@
+{
+    "project": "Tasbiaat & Mamolaat Web App - Frontend",
+    "framework": "Next.js (JavaScript, no TypeScript)",
+    "design_principles": {
+      "responsive": true,
+      "role_based_views": true,
+      "bilingual_support": "Urdu + English",
+      "secure_api_calls": true,
+      "ui_style": {
+        "theme": "Clean, card-based design",
+        "colors": {
+          "primary": "#2C3E50",
+          "secondary": "#18BC9C",
+          "danger": "#E74C3C",
+          "success": "#2ECC71",
+          "warning": "#F39C12",
+          "info": "#3498DB"
+        },
+        "fonts": {
+          "urdu": "Noto Nastaliq Urdu, serif",
+          "english": "Inter, sans-serif"
+        }
+      }
+    },
+    "roles_and_views": {
+      "Saalik": [
+        "Daily Tasbiaat & Mamolaat entry form (conditional by level)",
+        "History of previous entries (list + calendar view)",
+        "Level progress tracker"
+      ],
+      "Murabi": [
+        "Review Saalik submissions (list + filter)",
+        "Add comments to entries",
+        "Approve/reject and update Saalik level"
+      ],
+      "Masool": [
+        "Weekly aggregated summaries (charts/tables)",
+        "Export weekly reports"
+      ],
+      "Sheikh": [
+        "Monthly aggregated reports (charts + filters)",
+        "Filter by region, level, progress",
+        "Export monthly reports"
+      ],
+      "Admin": [
+        "User management dashboard",
+        "Assign roles & regions",
+        "System settings and logs"
+      ]
+    },
+    "ui_structure": {
+      "pages": [
+        "/login",
+        "/dashboard (role-based redirect)",
+        "/dashboard/saalik",
+        "/dashboard/murabi",
+        "/dashboard/masool",
+        "/dashboard/sheikh",
+        "/dashboard/admin",
+        "/profile",
+        "/settings"
+      ],
+      "components": [
+        "Layout (header, sidebar, footer)",
+        "RoleGuard (for role-based route protection)",
+        "SaalikForm (dynamic form fetched from /levels)",
+        "EntryHistory (list + calendar toggle)",
+        "ProgressTracker (per level)",
+        "ReportTable",
+        "ReportFilters",
+        "NotificationBell",
+        "AuthContext (JWT + systemKey management)"
+      ]
+    },
+    "inputs_per_level": {
+      "description": "For now, all levels share the same set of input fields. Later, fields will vary per level.",
+      "categories": {
+        "farayz": {
+          "label_urdu": "فرائض",
+          "items": ["فجر باجماعت", "ظہر باجماعت", "عصر باجماعت", "مغرب باجماعت", "عشاء باجماعت"]
+        },
+        "quran_tilawat": {
+          "label_urdu": "قرآن تلاوت",
+          "items": ["سورہ یاسین", "سورہ واقعہ", "سورہ ملک", "ادھا پارہ تلاوت"]
+        },
+        "zikr": {
+          "label_urdu": "ذکر",
+          "morning": ["100 استغفار", "100 درود شریف", "100 تیسرا کلمہ", "100 پہلا کلمہ"],
+          "evening": ["100 استغفار", "100 درود شریف", "100 تیسرا کلمہ", "100 پہلا کلمہ"]
+        },
+        "nawafil": {
+          "label_urdu": "نوافل",
+          "items": ["تہجد", "اشراق", "چاشت", "اوابین", "جمعہ کو صلاة التسبیح"]
+        },
+        "hifazat": {
+          "label_urdu": "حفاظت کرنے کی چیزیں",
+          "items": ["نظر کی حفاظت", "زبان کی حفاظت", "کان کی حفاظت"]
+        },
+        "sleep_wake": {
+          "label_urdu": "سونے اور جاگنے کا وقت",
+          "fields": ["sleep_time", "wake_time"]
+        }
+      }
+    },
+    "levels_ui": [
+      {
+        "level": 0,
+        "name_urdu": "ابتدائی",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 1,
+        "name_urdu": "معمولات ابتدائی",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 2,
+        "name_urdu": "بالجبر ذکر",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 3,
+        "name_urdu": "الفاس پاس",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 4,
+        "name_urdu": "لطائف",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 5,
+        "name_urdu": "الاذکار سلطان",
+        "form": "Uses categories defined in inputs_per_level"
+      },
+      {
+        "level": 6,
+        "name_urdu": "اثبات نفی",
+        "form": "Uses categories defined in inputs_per_level"
+      }
+    ],
+    "example_entry_ui": {
+      "date": "2025-09-10",
+      "day_index": 45,
+      "saalik_level": 0,
+      "categories": {
+        "farayz": {"فجر باجماعت": false, "ظہر باجماعت": false, "عصر باجماعت": true, "مغرب باجماعت": true, "عشاء باجماعت": true},
+        "quran_tilawat": {"سورہ یاسین": true, "سورہ واقعہ": true, "سورہ ملک": true, "ادھا پارہ تلاوت": false},
+        "zikr": {
+          "morning": {"100 استغفار": true, "100 درود شریف": true, "100 تیسرا کلمہ": true, "100 پہلا کلمہ": true},
+          "evening": {"100 استغفار": true, "100 درود شریف": true, "100 تیسرا کلمہ": true, "100 پہلا کلمہ": true}
+        },
+        "nawafil": {"تہجد": false, "اشراق": true, "چاشت": true, "اوابین": false, "جمعہ کو صلاة التسبیح": false},
+        "hifazat": {"نظر کی حفاظت": false, "زبان کی حفاظت": true, "کان کی حفاظت": false},
+        "sleep_wake": {"sleep_time": "11:35", "wake_time": "05:50"}
+      },
+      "status": "submitted"
+    },
+    "api_integration": {
+      "payload_structure": {
+        "authToken": "JWT",
+        "systemKey": "One-time encrypted key",
+        "data": "Entry or request payload"
+      },
+      "workflow": {
+        "login": "User enters phone/email + password -> gets JWT + session key",
+        "api_call": "Each API call includes {authToken, systemKey, data}",
+        "form_submission": "Saalik form data sent via POST /v1/entries"
+      }
+    },
+    "security": {
+      "token_storage": "JWT stored in HttpOnly cookie",
+      "system_key": "Generated per request, short validity",
+      "csrf_protection": "Next.js middleware"
+    },
+    "instruction":{
+    "coding": "after login the UI must have multlengeu suppert option where the user can change the UI and data en, ur and some more lengues in the future not not(en for english and ur for urdue). the website control fiel config file is a json that will laod and display the data in the UI based on the user selected language. this file will also have the colors, font familes, and other nessarey detais."
+    }
+
+  }
+  
