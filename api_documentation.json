@@ -48,6 +48,35 @@
           "method": "POST",
           "endpoint": "/auth/logout",
           "description": "Logout current session. This endpoint invalidates the current JWT token, removes the session from active sessions, and logs the logout action in the audit trail. It prevents further API access using the revoked token.",
+        },
+        "forgot_password": {
+          "method": "POST",
+          "endpoint": "/auth/forgot-password",
+          "description": "Forgot password endpoint that returns higher role contact details instead of allowing direct password reset. When a user forgets their password, they can use this endpoint to get the contact information of their supervisor who can help reset their password.",
+          "authentication_required": false,
+          "payload": {
+            "phone_or_email": "+923001234567 or user@example.com"
+          },
+          "response_example": {
+            "success": true,
+            "message": "Please contact your supervisor to reset your password",
+            "data": {
+              "user": {
+                "name": "John Doe",
+                "role": "Saalik"
+              },
+              "contact": {
+                "name": "Jane Smith",
+                "role": "Murabi",
+                "contact": {
+                  "email": "jane@example.com",
+                  "phone": "+923009876543"
+                }
+              }
+            }
+          }
+        },
+        "logout": {
           "authentication_required": true,
           "payload": {},
           "response_example": {

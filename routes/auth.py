@@ -376,3 +376,137 @@ def verify_token():
             'is_active': user.is_active
         }
     )
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+@rate_limit(max_requests=5, window_minutes=15)
+@validate_json_payload(required_fields=['phone_or_email'])
+@log_activity('forgot_password_request', 'authentication')
+@error_handler
+def forgot_password():
+    """
+    Forgot password endpoint that returns higher role contact details
+    instead of allowing direct password reset
+    """
+    data = g.json_data
+    phone_or_email = data['phone_or_email'].strip()
+    
+    # Validate input format
+    is_phone = phone_or_email.startswith('+') or phone_or_email.isdigit()
+    
+    if is_phone:
+        is_valid, error = validate_phone(phone_or_email)
+        if not is_valid:
+            return format_response(
+                success=False,
+                message=error,
+                status_code=400
+            )
+    else:
+        is_valid, error = validate_email(phone_or_email)
+        if not is_valid:
+            return format_response(
+                success=False,
+                message=error,
+                status_code=400
+            )
+    
+    # Find user by phone or email
+    user = None
+    if is_phone:
+        user = User.find_by_phone(phone_or_email)
+    else:
+        user = User.find_by_email(phone_or_email)
+    
+    if not user:
+        return format_response(
+            success=False,
+            message="No account found with this phone number or email",
+            status_code=404
+        )
+    
+    # Get higher role contact based on user's role
+    higher_role_contact = None
+    
+    if user.role == 'Saalik' and user.murabi_id:
+        murabi = User.find_by_id(user.murabi_id)
+        if murabi:
+            higher_role_contact = {
+                'name': murabi.name,
+                'role': 'Murabi',
+                'contact': {
+                    'email': murabi.email,
+                    'phone': murabi.phone
+                }
+            }
+    elif user.role == 'Murabi' and user.masool_id:
+        masool = User.find_by_id(user.masool_id)
+        if masool:
+            higher_role_contact = {
+                'name': masool.name,
+                'role': 'Masool',
+                'contact': {
+                    'email': masool.email,
+                    'phone': masool.phone
+                }
+            }
+    elif user.role == 'Masool' and user.sheikh_id:
+        sheikh = User.find_by_id(user.sheikh_id)
+        if sheikh:
+            higher_role_contact = {
+                'name': sheikh.name,
+                'role': 'Sheikh',
+                'contact': {
+                    'email': sheikh.email,
+                    'phone': sheikh.phone
+                }
+            }
+    elif user.role in ['Sheikh', 'Admin']:
+        # For highest roles, return admin contact or system message
+        admin = User.find_one({'role': 'Admin'})
+        if admin and admin._id != user._id:
+            higher_role_contact = {
+                'name': admin.name,
+                'role': 'Admin',
+                'contact': {
+                    'email': admin.email,
+                    'phone': admin.phone
+                }
+            }
+        else:
+            # If user is the admin or no other admin found
+            return format_response(
+                success=False,
+                message="Please contact system administrator for password assistance",
+                status_code=400
+            )
+    
+    if not higher_role_contact:
+        return format_response(
+            success=False,
+            message="Unable to find your supervisor's contact information. Please contact the administrator.",
+            status_code=404
+        )
+    
+    # Log the forgot password request
+    AuditLog.log_action(
+        user_id=user._id,
+        action='forgot_password_request',
+        resource_type='authentication',
+        details={
+            'requested_by': phone_or_email,
+            'higher_role_contacted': higher_role_contact['role'],
+            **get_request_info()
+        }
+    )
+    
+    return format_response(
+        success=True,
+        message="Please contact your supervisor to reset your password",
+        data={
+            'user': {
+                'name': user.name,
+                'role': user.role
+            },
+            'contact': higher_role_contact
+        }
+    )
