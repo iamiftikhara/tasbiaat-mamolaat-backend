@@ -34,7 +34,10 @@ def hash_password(password, salt=None):
 def verify_password(password, stored_password):
     """Verify a password against its hash
     
-    Supports both bcrypt and PBKDF2 pre-hashed passwords
+    Supports:
+    - bcrypt hashed passwords
+    - PBKDF2 pre-hashed passwords
+    - CryptoJS encrypted passwords
     """
     if stored_password.startswith('pbkdf2:'):
         # Handle PBKDF2 pre-hashed password from frontend
@@ -45,9 +48,17 @@ def verify_password(password, stored_password):
         # Legacy bcrypt verification
         _, bcrypt_hash = stored_password.split(':', 1)
         return bcrypt.checkpw(password.encode('utf-8'), bcrypt_hash.encode('utf-8'))
+    elif stored_password.startswith('U2FsdGVkX1'):
+        # Handle CryptoJS encrypted passwords
+        # For CryptoJS, we just compare the encrypted strings directly
+        return password == stored_password
     else:
-        # Handle legacy passwords without prefix
-        return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+        try:
+            # Try legacy bcrypt verification
+            return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+        except ValueError:
+            # If bcrypt fails, fall back to direct comparison for CryptoJS
+            return password == stored_password
 
 def generate_jwt_token(user_id, session_id=None, expires_in_days=30):
     """Generate JWT token with user and session information"""
