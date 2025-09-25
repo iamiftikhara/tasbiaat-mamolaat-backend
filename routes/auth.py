@@ -20,14 +20,26 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['POST'])
 @rate_limit(max_requests=10, window_minutes=15)  # Stricter rate limit for login
-@validate_json_payload(required_fields=['phone_or_email', 'password'])
+@validate_json_payload(required_fields=['password'])
 @log_activity('login_attempt', 'authentication')
 @error_handler
 def login():
     """User login endpoint"""
     data = g.json_data
-    phone_or_email = data['phone_or_email'].strip()
     password = data['password']
+    
+    # Handle both 'email' and 'phone_or_email' parameters
+    phone_or_email = None
+    if 'phone_or_email' in data:
+        phone_or_email = data['phone_or_email'].strip()
+    elif 'email' in data:
+        phone_or_email = data['email'].strip()
+    else:
+        return format_response(
+            success=False,
+            message="Missing required field: phone_or_email or email",
+            status_code=400
+        )
     
     # Validate input format
     is_phone = phone_or_email.startswith('+') or phone_or_email.isdigit()

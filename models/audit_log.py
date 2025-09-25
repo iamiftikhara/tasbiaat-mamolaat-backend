@@ -50,29 +50,41 @@ class AuditLog:
     def save(self):
         """Save audit log to database"""
         from models import audit_logs_collection
+        import logging
         
         log_data = self.to_dict()
         log_data.pop('_id', None)
         
-        result = audit_logs_collection.insert_one(log_data)
-        self._id = result.inserted_id
-        
-        return self
+        try:
+            result = audit_logs_collection.insert_one(log_data)
+            self._id = result.inserted_id
+            return self
+        except Exception as e:
+            # Log the error but don't crash the application
+            logging.error(f"Failed to save audit log: {str(e)}")
+            # Still return self to allow the application to continue
+            return self
     
     @classmethod
     def log_action(cls, user_id, action, resource_type, resource_id=None, 
                    details=None, ip_address=None, user_agent=None):
         """Create and save an audit log entry"""
-        audit_log = cls(
-            user_id=user_id,
-            action=action,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            details=details,
-            ip_address=ip_address,
-            user_agent=user_agent
-        )
-        return audit_log.save()
+        try:
+            audit_log = cls(
+                user_id=user_id,
+                action=action,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                details=details,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            return audit_log.save()
+        except Exception as e:
+            import logging
+            logging.error(f"Failed to create audit log: {str(e)}")
+            # Return None instead of raising an exception
+            return None
     
     @classmethod
     def find_by_user_id(cls, user_id, limit=100, skip=0):

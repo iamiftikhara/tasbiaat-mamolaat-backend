@@ -10,13 +10,44 @@ from utils.error_handler import NotFoundError, NoDataError
 
 class JSONStorage:
     def __init__(self, data_dir="data"):
-        self.data_dir = data_dir
+        # Check if we're running on Vercel (read-only filesystem)
+        if os.environ.get('VERCEL') == '1':
+            # Use /tmp directory for Vercel's serverless environment
+            self.data_dir = os.path.join('/tmp', data_dir)
+            # Load initial data from the read-only data directory
+            self._initialize_tmp_data(data_dir)
+        else:
+            self.data_dir = data_dir
+        
         self.ensure_data_dir()
+    
+    def _initialize_tmp_data(self, original_data_dir):
+        """Initialize /tmp with data from the read-only filesystem"""
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir, exist_ok=True)
+            
+        # Copy existing data files to tmp if they exist
+        if os.path.exists(original_data_dir):
+            for filename in os.listdir(original_data_dir):
+                if filename.endswith('.json'):
+                    try:
+                        src_path = os.path.join(original_data_dir, filename)
+                        dst_path = os.path.join(self.data_dir, filename)
+                        
+                        # Only copy if destination doesn't exist
+                        if not os.path.exists(dst_path):
+                            with open(src_path, 'r', encoding='utf-8') as src:
+                                data = src.read()
+                            with open(dst_path, 'w', encoding='utf-8') as dst:
+                                dst.write(data)
+                    except Exception:
+                        # Continue even if some files can't be copied
+                        pass
     
     def ensure_data_dir(self):
         """Ensure data directory exists"""
         if not os.path.exists(self.data_dir):
-            os.makedirs(self.data_dir)
+            os.makedirs(self.data_dir, exist_ok=True)
     
     def get_file_path(self, collection_name: str) -> str:
         """Get file path for a collection"""
