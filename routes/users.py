@@ -531,9 +531,30 @@ def deactivate_user(user_id):
         new_values={'is_active': False}
     )
     
+    # Get higher role contact details
+    higher_role_contact = None
+    if user.murabi_id:
+        murabi = User.find_by_id(user.murabi_id)
+        if murabi:
+            higher_role_contact = {
+                "name": murabi.name,
+                "role": murabi.role,
+                "contact": {
+                    "phone": murabi.phone,
+                    "email": murabi.email
+                }
+            }
+    
     return format_response(
         success=True,
-        message="User deactivated successfully"
+        message="User deactivated successfully",
+        data={
+            "deactivated_user": {
+                "name": user.name,
+                "id": str(user._id)
+            },
+            "higher_role_contact": higher_role_contact
+        }
     )
 
 @users_bp.route('/<user_id>/activate', methods=['POST'])

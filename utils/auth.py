@@ -71,7 +71,27 @@ def authenticate_user(phone_or_email, password):
         return None, "User not found"
     
     if not user.is_active:
-        return None, "Account is deactivated"
+        # Get higher role contact details
+        higher_role_contact = None
+        if user.murabi_id:
+            murabi = User.find_by_id(user.murabi_id)
+            if murabi:
+                higher_role_contact = {
+                    "name": murabi.name,
+                    "role": murabi.role,
+                    "contact": {
+                        "phone": murabi.phone,
+                        "email": murabi.email
+                    }
+                }
+        
+        return None, "Account is deactivated", {
+            "deactivated_user": {
+                "name": user.name,
+                "id": str(user._id)
+            },
+            "higher_role_contact": higher_role_contact
+        }
     
     if not verify_password(password, user.password_hash):
         return None, "Invalid password"

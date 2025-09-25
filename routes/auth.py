@@ -62,7 +62,14 @@ def login():
             )
     
     # Authenticate user
-    user, auth_error = authenticate_user(phone_or_email, password)
+    auth_result = authenticate_user(phone_or_email, password)
+    
+    # Unpack the result (user, error_message, additional_data)
+    if len(auth_result) == 2:
+        user, auth_error = auth_result
+        additional_data = None
+    else:
+        user, auth_error, additional_data = auth_result
     
     if auth_error:
         # Log failed login attempt
@@ -76,6 +83,15 @@ def login():
                 **get_request_info()
             }
         )
+        
+        # If account is deactivated, include higher role contact details
+        if "deactivated" in auth_error.lower() and additional_data:
+            return format_response(
+                success=False,
+                message="Account is deactivated. Please contact your supervisor for assistance.",
+                data=additional_data,
+                status_code=401
+            )
         
         return format_response(
             success=False,
