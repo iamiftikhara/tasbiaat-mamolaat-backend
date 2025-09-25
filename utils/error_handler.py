@@ -82,14 +82,29 @@ def handle_api_error(error):
 
 def handle_generic_error(error):
     """Handle generic Python exceptions"""
-    logger.error(f"Unhandled error: {str(error)}", exc_info=True)
+    error_type = type(error).__name__
+    error_message = str(error)
+    
+    # Log the full error with traceback
+    logger.error(f"Unhandled error: {error_type} - {error_message}", exc_info=True)
+    
+    # In development mode, include more details in the response
+    from flask import current_app
+    debug_mode = current_app.config.get('DEBUG', False)
+    
+    details = {}
+    if debug_mode:
+        details = {
+            "error_type": error_type,
+            "error_message": error_message
+        }
     
     response = {
         "success": False,
         "error": {
             "code": "INTERNAL_ERROR",
             "message": "An unexpected error occurred",
-            "details": {}
+            "details": details
         }
     }
     
