@@ -45,6 +45,11 @@ def create_app(config_class=Config):
     
     return app
 
+# Create the app instance for Vercel
+app = create_app()
+
+# This is required for Vercel serverless functions
+handler = app
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)
