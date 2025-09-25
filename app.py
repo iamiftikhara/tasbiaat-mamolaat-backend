@@ -46,8 +46,8 @@ def create_app(config_class=Config):
 # Create the app instance for Vercel
 app = create_app()
 
-# This is required for Vercel serverless functions
-handler = app
+# For Vercel serverless functions - app variable is sufficient
+# Do not define a handler variable as it causes conflicts
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
