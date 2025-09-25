@@ -23,6 +23,11 @@ def create_app(config_class=Config):
     CORS(app, origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']))
     
     # Add root route
+    @app.route('/favicon.png')
+    @app.route('/favicon.ico')
+    def favicon():
+        return app.send_static_file('favicon.svg')
+        
     @app.route('/')
     def index():
         html = """
