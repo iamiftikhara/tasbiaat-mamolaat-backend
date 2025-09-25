@@ -18,6 +18,21 @@ from models.audit_log import AuditLog
 
 auth_bp = Blueprint('auth', __name__)
 
+@auth_bp.route('/salt', methods=['GET'])
+@rate_limit(max_requests=20, window_minutes=15)
+@error_handler
+def get_salt():
+    """Get a random salt for client-side password hashing"""
+    from utils.auth import generate_salt
+    
+    salt = generate_salt()
+    return format_response(
+        success=True,
+        message="Salt generated successfully",
+        data={"salt": salt},
+        status_code=200
+    )
+
 @auth_bp.route('/login', methods=['POST'])
 @rate_limit(max_requests=10, window_minutes=15)  # Stricter rate limit for login
 @validate_json_payload(required_fields=['password'])
@@ -27,6 +42,7 @@ def login():
     """User login endpoint"""
     data = g.json_data
     password = data['password']
+    is_pre_hashed = data.get('is_pre_hashed', False)
     
     # Handle both 'email' and 'phone_or_email' parameters
     phone_or_email = None
@@ -62,7 +78,7 @@ def login():
             )
     
     # Authenticate user
-    auth_result = authenticate_user(phone_or_email, password)
+    auth_result = authenticate_user(phone_or_email, password, is_pre_hashed=is_pre_hashed)
     
     # Unpack the result (user, error_message, additional_data)
     if len(auth_result) == 2:

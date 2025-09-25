@@ -4,20 +4,50 @@ Authentication utilities for JWT token management and password handling
 
 import jwt
 import bcrypt
+import base64
+import hashlib
+import os
 from datetime import datetime, timedelta
 from flask import current_app, request
 from models.user import User
 from models.session import Session
 import secrets
 
-def hash_password(password):
-    """Hash a password using bcrypt"""
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+def generate_salt():
+    """Generate a random salt for password hashing"""
+    return base64.b64encode(os.urandom(16)).decode('utf-8')
 
-def verify_password(password, hashed_password):
-    """Verify a password against its hash"""
-    return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+def hash_password(password, salt=None):
+    """Hash a password using bcrypt or store pre-hashed password
+    
+    If salt is provided, assumes the password is already hashed with PBKDF2 on client
+    If salt is not provided, uses bcrypt to hash the password
+    """
+    if salt:
+        # For pre-hashed passwords from frontend, store with salt prefix
+        return f"pbkdf2:{salt}:{password}"
+    else:
+        # Legacy method using bcrypt
+        bcrypt_salt = bcrypt.gensalt()
+        return f"bcrypt:{bcrypt.hashpw(password.encode('utf-8'), bcrypt_salt).decode('utf-8')}"
+
+def verify_password(password, stored_password):
+    """Verify a password against its hash
+    
+    Supports both bcrypt and PBKDF2 pre-hashed passwords
+    """
+    if stored_password.startswith('pbkdf2:'):
+        # Handle PBKDF2 pre-hashed password from frontend
+        _, salt, hash_value = stored_password.split(':', 2)
+        # Password from client should already be hashed with same salt
+        return password == hash_value
+    elif stored_password.startswith('bcrypt:'):
+        # Legacy bcrypt verification
+        _, bcrypt_hash = stored_password.split(':', 1)
+        return bcrypt.checkpw(password.encode('utf-8'), bcrypt_hash.encode('utf-8'))
+    else:
+        # Handle legacy passwords without prefix
+        return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
 
 def generate_jwt_token(user_id, session_id=None, expires_in_days=30):
     """Generate JWT token with user and session information"""
@@ -60,8 +90,14 @@ def create_user_session(user_id, device_info=None, ip_address=None, user_agent=N
     session.save()
     return session
 
-def authenticate_user(phone_or_email, password):
-    """Authenticate user with phone/email and password"""
+def authenticate_user(phone_or_email, password, is_pre_hashed=False):
+    """Authenticate user with phone/email and password
+    
+    Args:
+        phone_or_email: User's phone number or email
+        password: Password (plain or pre-hashed from client)
+        is_pre_hashed: Whether the password is already hashed by the client
+    """
     # Try to find user by phone first, then by email
     user = User.find_by_phone(phone_or_email)
     if not user:

@@ -1,10 +1,12 @@
 """
-User model for JSON storage
+User model for MongoDB and JSON storage
 """
 
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
+import os
+from bson import ObjectId
 
 class User:
     """User model with role-based hierarchy and relationships"""
@@ -89,24 +91,59 @@ class User:
     @classmethod
     def from_dict(cls, data):
         """Create User instance from dictionary"""
-        user = cls(**data)
+        # Create a copy of data to avoid modifying the original
+        data_copy = data.copy()
+        
+        # Handle date fields
+        for date_field in ['created_at', 'updated_at', 'level_start_date']:
+            if date_field in data_copy and isinstance(data_copy[date_field], str):
+                try:
+                    data_copy[date_field] = datetime.fromisoformat(data_copy[date_field].replace('Z', '+00:00'))
+                except (ValueError, TypeError):
+                    data_copy[date_field] = None
+        
+        # Create user instance
+        user = cls(**data_copy)
+        
+        # Set _id attribute
         if '_id' in data:
             user._id = data['_id']
+            
         return user
     
     def save(self):
         """Save user to database"""
         from models import users_collection
+        import os
         
         self.updated_at = datetime.utcnow()
         user_data = self.to_dict(include_sensitive=True)
         
+        # Check if we're using MongoDB
+        USE_MONGODB = os.environ.get('MONGO_URI') is not None
+        
         if hasattr(self, '_id') and self._id:
             # Update existing user
-            users_collection.update_one(
-                {'_id': self._id},
-                {'$set': user_data}
-            )
+            if USE_MONGODB:
+                # Convert string ID to ObjectId if needed
+                if isinstance(self._id, str):
+                    object_id = ObjectId(self._id)
+                else:
+                    object_id = self._id
+                
+                # Remove _id from update data
+                update_data = {k: v for k, v in user_data.items() if k != '_id'}
+                
+                users_collection.update_one(
+                    {'_id': object_id},
+                    {'$set': update_data}
+                )
+            else:
+                # JSON storage
+                users_collection.update_one(
+                    {'_id': self._id},
+                    {'$set': user_data}
+                )
         else:
             # Insert new user
             user_data.pop('_id', None)  # Remove _id for insert
@@ -119,10 +156,34 @@ class User:
     def find_by_id(cls, user_id):
         """Find user by ID"""
         from models import users_collection
+        import os
         
-        user_data = users_collection.find_one({'_id': user_id})
-        if user_data:
-            return cls.from_dict(user_data)
+        # Check if we're using MongoDB
+        USE_MONGODB = os.environ.get('MONGO_URI') is not None
+        
+        if USE_MONGODB:
+            try:
+                # Convert string ID to ObjectId for MongoDB if it's a string
+                if isinstance(user_id, str):
+                    object_id = ObjectId(user_id)
+                else:
+                    object_id = user_id
+                
+                user_data = users_collection.find_one({'_id': object_id})
+                if user_data:
+                    # Ensure _id is properly set in the returned object
+                    if '_id' in user_data and isinstance(user_data['_id'], ObjectId):
+                        user_data['_id'] = user_data['_id']
+                    return cls.from_dict(user_data)
+            except Exception as e:
+                print(f"Error finding user by ID: {e}")
+                return None
+        else:
+            # JSON storage
+            user_data = users_collection.find_one({'_id': user_id})
+            if user_data:
+                return cls.from_dict(user_data)
+        
         return None
     
     @classmethod
@@ -239,5 +300,16 @@ class User:
     @classmethod
     def create_indexes(cls):
         """Create database indexes for optimal performance"""
-        # Note: JSON storage doesn't support indexes, but keeping method for MongoDB compatibility
-        pass
+        from models import users_collection
+        import os
+        
+        # Only create indexes if using MongoDB
+        if os.environ.get('MONGO_URI'):
+            # Create indexes for frequently queried fields
+            users_collection.create_index('email', unique=True, sparse=True)
+            users_collection.create_index('phone', unique=True)
+            users_collection.create_index('role')
+            users_collection.create_index('murabi_id')
+            users_collection.create_index('masool_id')
+            users_collection.create_index('sheikh_id')
+            print("MongoDB indexes created for User collection")

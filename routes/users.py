@@ -29,6 +29,8 @@ def create_user():
     phone = data['phone'].strip()
     email = data.get('email', '').strip() if data.get('email') else None
     password = data['password']
+    is_pre_hashed = data.get('is_pre_hashed', False)
+    salt = data.get('salt', None)
     role = data['role']
     level = data.get('level', 0)
     cycle_days = data.get('cycle_days', 40)
@@ -116,7 +118,7 @@ def create_user():
             name=name,
             phone=phone,
             email=email,
-            password_hash=hash_password(password),
+            password_hash=hash_password(password, salt if is_pre_hashed else None),
             role=role,
             murabi_id=murabi_id,
             level=level,
