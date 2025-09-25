@@ -1,6 +1,7 @@
 {
   "api_documentation": {
-    "base_url": "http://localhost:5000/api/v1",
+    "base_url": "https://zikar-bd.vercel.app/api/v1",
+    "local_development_url": "http://localhost:5000/api/v1",
     "authentication": {
       "type": "Bearer Token",
       "header": "Authorization: Bearer <jwt_token>",
@@ -17,7 +18,7 @@
         "login": {
           "method": "POST",
           "endpoint": "/auth/login",
-          "description": "User login with phone/email and password",
+          "description": "User login with phone/email and password. This endpoint authenticates users by validating their credentials, creates a new session, generates JWT tokens, and logs the login action in the audit trail. It returns user details along with access and refresh tokens for subsequent API calls.",
           "authentication_required": false,
           "payload": {
             "identifier": "+923001234567 or user@example.com",
@@ -46,7 +47,7 @@
         "logout": {
           "method": "POST",
           "endpoint": "/auth/logout",
-          "description": "Logout current session",
+          "description": "Logout current session. This endpoint invalidates the current JWT token, removes the session from active sessions, and logs the logout action in the audit trail. It prevents further API access using the revoked token.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -58,7 +59,7 @@
         "logout_all": {
           "method": "POST",
           "endpoint": "/auth/logout-all",
-          "description": "Logout all user sessions",
+          "description": "Logout all user sessions. This endpoint invalidates all active JWT tokens for the user across all devices, removes all sessions from the database, and logs the action in the audit trail. Useful for security concerns or when changing passwords.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -72,7 +73,7 @@
         "refresh_token": {
           "method": "POST",
           "endpoint": "/auth/refresh",
-          "description": "Refresh JWT access token",
+          "description": "Refresh JWT access token. This endpoint validates the provided refresh token, generates a new access token with updated expiration time, and maintains the user's session without requiring re-authentication. Essential for maintaining long-term sessions securely.",
           "authentication_required": true,
           "payload": {
             "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -89,7 +90,7 @@
         "current_user": {
           "method": "GET",
           "endpoint": "/auth/me",
-          "description": "Get current user information",
+          "description": "Get current user information. This endpoint retrieves the authenticated user's complete profile including role, level, and relationships. It uses the JWT token to identify the user without requiring additional credentials.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -114,7 +115,7 @@
         "list_sessions": {
           "method": "GET",
           "endpoint": "/auth/sessions",
-          "description": "List user's active sessions",
+          "description": "List user's active sessions. This endpoint retrieves all active sessions for the current user across different devices and locations. It provides details about each session including device information, IP address, and last activity timestamp.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -136,7 +137,7 @@
         "revoke_session": {
           "method": "DELETE",
           "endpoint": "/auth/sessions/<session_id>",
-          "description": "Revoke specific session",
+          "description": "Revoke specific session. This endpoint invalidates a specific session identified by its ID, removing it from active sessions and preventing further API access using its associated token. Useful for logging out from a specific device.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -148,7 +149,7 @@
         "change_password": {
           "method": "POST",
           "endpoint": "/auth/change-password",
-          "description": "Change user password",
+          "description": "Change user password. This endpoint validates the current password, updates it with the new password after hashing, invalidates all existing sessions for security, and logs the password change in the audit trail.",
           "authentication_required": true,
           "payload": {
             "current_password": "OldPassword123!",
@@ -163,7 +164,7 @@
         "verify_token": {
           "method": "POST",
           "endpoint": "/auth/verify",
-          "description": "Verify JWT token validity",
+          "description": "Verify JWT token validity. This endpoint checks if the provided token is valid, not expired, and not revoked. It returns the token's expiration time and can be used by clients to proactively refresh tokens before they expire.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -180,7 +181,7 @@
         "create_user": {
           "method": "POST",
           "endpoint": "/users",
-          "description": "Create new user (role-based restrictions apply)",
+          "description": "Create new user (role-based restrictions apply). This endpoint registers a new user in the system with specified role and level, validates input data, hashes the password securely, assigns relationships (like murabi), and logs the creation in the audit trail.",
           "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
           "payload": {
@@ -213,7 +214,7 @@
         "list_users": {
           "method": "GET",
           "endpoint": "/users",
-          "description": "List users based on role and hierarchy",
+          "description": "List users based on role and hierarchy. This endpoint retrieves users filtered by various criteria with pagination support. It enforces hierarchical access control where users can only see others at or below their level in the organizational structure.",
           "authentication_required": true,
           "query_parameters": {
             "page": 1,
@@ -251,7 +252,7 @@
         "get_user": {
           "method": "GET",
           "endpoint": "/users/<user_id>",
-          "description": "Get specific user details",
+          "description": "Get specific user details. This endpoint retrieves comprehensive information about a specific user including their profile, level, relationships, and status. Access is controlled by role hierarchy.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -277,7 +278,7 @@
         "update_user": {
           "method": "PUT",
           "endpoint": "/users/<user_id>",
-          "description": "Update user information",
+          "description": "Update user information. This endpoint modifies user data such as name, email, level, or other attributes. It validates the changes, enforces role-based permissions, and logs all modifications in the audit trail.",
           "authentication_required": true,
           "payload": {
             "name": "John Smith",
@@ -352,7 +353,7 @@
         "create_entry": {
           "method": "POST",
           "endpoint": "/entries",
-          "description": "Create or update daily entry",
+          "description": "Create or update daily entry. This endpoint records a user's spiritual practices for a specific date, calculates completion status based on level requirements, updates streak information, and notifies murabi of significant changes or achievements.",
           "authentication_required": true,
           "required_roles": ["Saalik"],
           "payload": {
@@ -396,7 +397,7 @@
         "list_entries": {
           "method": "GET",
           "endpoint": "/entries",
-          "description": "List entries based on role and hierarchy",
+          "description": "List entries based on role and hierarchy. This endpoint retrieves practice entries with filtering options and pagination. Access control ensures users only see their own entries or those of users they supervise based on role hierarchy.",
           "authentication_required": true,
           "query_parameters": {
             "page": 1,
@@ -438,7 +439,7 @@
         "get_entry": {
           "method": "GET",
           "endpoint": "/entries/<entry_id>",
-          "description": "Get specific entry details",
+          "description": "Get specific entry details. This endpoint retrieves comprehensive information about a specific practice entry including all recorded values, completion status, cycle day calculation, and any comments from supervisors.",
           "authentication_required": true,
           "payload": {},
           "response_example": {
@@ -471,7 +472,7 @@
         "add_comment": {
           "method": "POST",
           "endpoint": "/entries/<entry_id>/comment",
-          "description": "Add comment to entry",
+          "description": "Add comment to entry. This endpoint allows supervisors to provide feedback on a user's practice entry, stores the comment with timestamp and author information, and notifies the entry owner of the new comment.",
           "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
           "payload": {
@@ -542,7 +543,7 @@
         "weekly_report": {
           "method": "GET",
           "endpoint": "/reports/weekly",
-          "description": "Generate weekly reports",
+          "description": "Generate weekly reports. This endpoint aggregates practice data for a week period, calculates completion rates and trends, and provides insights into individual and group performance. It supports filtering by user and week offset.",
           "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
           "query_parameters": {
@@ -578,7 +579,7 @@
         "monthly_report": {
           "method": "GET",
           "endpoint": "/reports/monthly",
-          "description": "Generate monthly reports",
+          "description": "Generate monthly reports. This endpoint provides comprehensive monthly statistics including completion rates, level distributions, weekly trends, and murabi performance metrics. It offers deeper insights than weekly reports for long-term analysis.",
           "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool"],
           "query_parameters": {
