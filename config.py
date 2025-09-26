@@ -18,7 +18,7 @@ class Config:
     REDIS_URL = os.environ.get('REDIS_URL')
     
     # JWT settings
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'tasbiaat-mamolaat-jwt-secret-key-default')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     JWT_ALGORITHM = 'HS256'  # Can be changed to RS256 for production
