@@ -61,7 +61,7 @@ def verify_password(password, stored_password):
             # If bcrypt fails, fall back to direct comparison
             return password == stored_password
 
-def generate_jwt_token(user_id, session_id=None, expires_in_days=30):
+def generate_jwt_token(user_id, session_id=None, expires_in_days=7):
     """Generate JWT token with user and session information"""
     payload = {
         'user_id': str(user_id),

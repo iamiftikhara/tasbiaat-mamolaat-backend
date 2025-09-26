@@ -19,7 +19,7 @@ class Config:
     
     # JWT settings
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'tasbiaat-mamolaat-jwt-secret-key-default')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)  # Extended to 7 days
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     JWT_ALGORITHM = 'HS256'  # Can be changed to RS256 for production
     

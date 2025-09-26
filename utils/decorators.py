@@ -18,10 +18,17 @@ def jwt_required_custom(f):
     def decorated_function(*args, **kwargs):
         token = None
         
-        # Check for token in Authorization header
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
+        # Check for token in request payload first
+        if request.is_json:
+            payload = request.get_json()
+            if payload and 'token' in payload:
+                token = payload.get('token')
+        
+        # Fallback to Authorization header for backward compatibility
+        if not token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
         
         if not token:
             return format_response(
@@ -74,7 +81,17 @@ def api_key_required(f):
     """Decorator for API key authentication (for system-to-system calls)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        api_key = request.headers.get('X-API-Key')
+        api_key = None
+        
+        # Check for API key in request payload first
+        if request.is_json:
+            payload = request.get_json()
+            if payload and 'api_key' in payload:
+                api_key = payload.get('api_key')
+        
+        # Fallback to header for backward compatibility
+        if not api_key:
+            api_key = request.headers.get('X-API-Key')
         
         if not api_key:
             return format_response(
