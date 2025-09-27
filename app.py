@@ -158,14 +158,34 @@ def create_app(config_class=Config):
     
     # Setup logging
     if not app.debug and not app.testing:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        file_handler = RotatingFileHandler('logs/tasbiaat_mamolaat.log', maxBytes=10240, backupCount=10)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
+        # Check if we're running on Vercel (read-only filesystem)
+        is_vercel = os.environ.get('VERCEL', False)
+        
+        if not is_vercel and not os.path.exists('logs'):
+            try:
+                os.mkdir('logs')
+                file_handler = RotatingFileHandler('logs/tasbiaat_mamolaat.log', maxBytes=10240, backupCount=10)
+                file_handler.setFormatter(logging.Formatter(
+                    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+                ))
+                file_handler.setLevel(logging.INFO)
+                app.logger.addHandler(file_handler)
+            except OSError:
+                # Fallback to stream handler if file system is read-only
+                stream_handler = logging.StreamHandler()
+                stream_handler.setFormatter(logging.Formatter(
+                    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+                ))
+                stream_handler.setLevel(logging.INFO)
+                app.logger.addHandler(stream_handler)
+        else:
+            # Use stream handler for Vercel environment
+            stream_handler = logging.StreamHandler()
+            stream_handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+            ))
+            stream_handler.setLevel(logging.INFO)
+            app.logger.addHandler(stream_handler)
         
         app.logger.setLevel(logging.INFO)
         app.logger.info('Tasbiaat & Mamolaat startup')
