@@ -1,6 +1,5 @@
-from app import create_app
+from app import app
 
-app = create_app()
-
-# This is for Vercel serverless functions
-handler = app
+# This is the handler for Vercel serverless functions
+# The variable name must be 'app' or 'handler'
+# For Flask, we use the app variable directly
