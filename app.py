@@ -3,7 +3,7 @@ Tasbiaat & Mamolaat Web App - Flask REST API
 Main application entry point
 """
 
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, redirect, request
 from flask_cors import CORS
 from config import Config
 from extensions import redis_client, jwt
@@ -51,48 +51,103 @@ def create_app(config_class=Config):
                     border-bottom: 2px solid #eee;
                     padding-bottom: 10px;
                 }
-                .api-info {
-                    background-color: #f8f9fa;
-                    border-left: 4px solid #28a745;
-                    padding: 15px;
-                    margin: 20px 0;
-                }
                 .endpoint {
-                    margin: 10px 0;
-                    font-family: monospace;
-                    background-color: #f1f1f1;
-                    padding: 5px;
-                    border-radius: 3px;
+                    background-color: #f8f9fa;
+                    padding: 10px;
+                    border-radius: 4px;
+                    margin-bottom: 10px;
                 }
-                footer {
-                    margin-top: 30px;
-                    text-align: center;
-                    font-size: 0.9em;
-                    color: #777;
+                .method {
+                    font-weight: bold;
+                    color: #e74c3c;
+                }
+                a {
+                    color: #3498db;
+                    text-decoration: none;
+                }
+                a:hover {
+                    text-decoration: underline;
                 }
             </style>
         </head>
         <body>
             <h1>Tasbiaat & Mamolaat API</h1>
-            <div class="api-info">
-                <p>Welcome to the Tasbiaat & Mamolaat API server. This API provides endpoints for managing Islamic practice entries and user progress tracking.</p>
-                <p>The API is running successfully. All endpoints are available under the <code>/api/v1</code> prefix.</p>
+            <p>Welcome to the Tasbiaat & Mamolaat API. This is the backend server for the Tasbiaat & Mamolaat application.</p>
+            <p>For API documentation, please refer to the provided documentation or contact the administrator.</p>
+            <div class="endpoint">
+                <p><span class="method">GET</span> /api/v1/auth/salt - Get salt for password hashing</p>
+                <p><span class="method">POST</span> /api/v1/auth/login - User login</p>
+                <p><span class="method">POST</span> /api/v1/auth/logout - User logout</p>
+                <p><span class="method">GET</span> /api/v1/users/profile - Get user profile</p>
+                <p><span class="method">GET</span> /api/v1/entries - Get entries</p>
             </div>
-            
-            <h2>Main API Endpoints:</h2>
-            <div class="endpoint">/api/v1/auth/login</div>
-            <div class="endpoint">/api/v1/users/me</div>
-            <div class="endpoint">/api/v1/entries</div>
-            
-            <p>For complete API documentation, please refer to the API documentation provided to developers.</p>
-            
-            <footer>
-                &copy; 2025 Tasbiaat & Mamolaat - All Rights Reserved
-            </footer>
         </body>
         </html>
         """
         return render_template_string(html)
+    
+    # Add route aliases for backward compatibility (without /api/v1 prefix)
+    @app.route('/auth/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    def auth_alias(subpath):
+        # Handle OPTIONS requests directly for CORS preflight
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            # Add CORS headers
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', '*')
+            headers['Access-Control-Max-Age'] = '86400'  # 24 hours
+            return response
+        return redirect(f"/api/v1/auth/{subpath}", code=307)
+        
+    @app.route('/users/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    def users_alias(subpath):
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', '*')
+            headers['Access-Control-Max-Age'] = '86400'
+            return response
+        return redirect(f"/api/v1/users/{subpath}", code=307)
+        
+    @app.route('/entries/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    def entries_alias(subpath):
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', '*')
+            headers['Access-Control-Max-Age'] = '86400'
+            return response
+        return redirect(f"/api/v1/entries/{subpath}", code=307)
+        
+    @app.route('/reports/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    def reports_alias(subpath):
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', '*')
+            headers['Access-Control-Max-Age'] = '86400'
+            return response
+        return redirect(f"/api/v1/reports/{subpath}", code=307)
+        
+    @app.route('/admin/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    def admin_alias(subpath):
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', '*')
+            headers['Access-Control-Max-Age'] = '86400'
+            return response
+        return redirect(f"/api/v1/admin/{subpath}", code=307)
     
     # Register blueprints
     register_blueprints(app)
@@ -103,23 +158,20 @@ def create_app(config_class=Config):
     
     # Setup logging
     if not app.debug and not app.testing:
-        # Use stream handler instead of file handler for Vercel's read-only filesystem
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(logging.Formatter(
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        file_handler = RotatingFileHandler('logs/tasbiaat_mamolaat.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
             '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
         ))
-        stream_handler.setLevel(logging.INFO)
-        app.logger.addHandler(stream_handler)
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
         app.logger.setLevel(logging.INFO)
-        app.logger.info('Tasbiaat Mamolaat API startup')
+        app.logger.info('Tasbiaat & Mamolaat startup')
     
     return app
 
-# Create the app instance for Vercel
-app = create_app()
-
-# For Vercel serverless functions - app variable is sufficient
-# Do not define a handler variable as it causes conflicts
-
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)

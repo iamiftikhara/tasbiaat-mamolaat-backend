@@ -2,12 +2,13 @@
 Decorators for authentication, authorization, and rate limiting
 """
 
-from functools import wraps
+from functools import wraps, update_wrapper
 from flask import request, jsonify, current_app, g
 from utils.auth import get_user_from_token, validate_api_key, get_request_info
 from utils.helpers import format_response
 import time
 from collections import defaultdict
+import uuid
 
 # Simple in-memory rate limiting (in production, use Redis)
 rate_limit_storage = defaultdict(list)
@@ -15,7 +16,7 @@ rate_limit_storage = defaultdict(list)
 def jwt_required_custom(f):
     """Custom JWT authentication decorator"""
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         token = None
         
         # Check for token in request payload first
@@ -63,13 +64,15 @@ def jwt_required_custom(f):
         
         return f(*args, **kwargs)
     
-    return decorated_function
+    # Preserve the original function name to avoid Flask endpoint conflicts
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 def role_required(*allowed_roles):
     """Decorator to check if user has required role"""
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if not hasattr(g, 'current_user') or not g.current_user:
                 return format_response(
                     success=False,
@@ -78,26 +81,34 @@ def role_required(*allowed_roles):
                 )
             
             # Check if required_roles is in the payload and use that instead
-            roles_to_check = allowed_roles
-            if hasattr(g, 'required_roles'):
-                roles_to_check = g.required_roles
+            required_roles = None
+            if hasattr(g, 'required_roles') and g.required_roles:
+                required_roles = g.required_roles
+            
+            # If no required_roles in payload, use the ones passed to the decorator
+            roles_to_check = required_roles if required_roles else allowed_roles
             
             if g.current_user.role not in roles_to_check:
                 return format_response(
                     success=False,
-                    message="Insufficient permissions",
+                    message=f"Access denied. Required roles: {', '.join(roles_to_check)}",
                     status_code=403
                 )
             
             return f(*args, **kwargs)
         
-        return decorated_function
+        # Preserve the original function name to avoid Flask endpoint conflicts
+        wrapper.__name__ = f.__name__
+        return wrapper
+    
+    # Generate a unique name for the decorator function to avoid Flask endpoint conflicts
+    decorator.__name__ = f"role_required_{uuid.uuid4().hex[:8]}"
     return decorator
 
 def api_key_required(f):
     """Decorator for API key authentication (for system-to-system calls)"""
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         api_key = None
         
         # Check for API key in request payload first
@@ -129,13 +140,15 @@ def api_key_required(f):
         
         return f(*args, **kwargs)
     
-    return decorated_function
+    # Preserve the original function name to avoid Flask endpoint conflicts
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 def rate_limit(max_requests=100, window_minutes=60):
     """Simple rate limiting decorator"""
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if not current_app.config.get('ENABLE_RATE_LIMITING', True):
                 return f(*args, **kwargs)
             
@@ -166,14 +179,19 @@ def rate_limit(max_requests=100, window_minutes=60):
             
             return f(*args, **kwargs)
         
-        return decorated_function
+        # Preserve the original function name to avoid Flask endpoint conflicts
+        wrapper.__name__ = f.__name__
+        return wrapper
+    
+    # Generate a unique name for the decorator function to avoid Flask endpoint conflicts
+    decorator.__name__ = f"rate_limit_{uuid.uuid4().hex[:8]}"
     return decorator
 
 def validate_json_payload(required_fields=None, optional_fields=None):
     """Decorator to validate JSON payload"""
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if not request.is_json:
                 return format_response(
                     success=False,
@@ -204,14 +222,19 @@ def validate_json_payload(required_fields=None, optional_fields=None):
             
             return f(*args, **kwargs)
         
-        return decorated_function
+        # Preserve the original function name to avoid Flask endpoint conflicts
+        wrapper.__name__ = f.__name__
+        return wrapper
+    
+    # Generate a unique name for the decorator function to avoid Flask endpoint conflicts
+    decorator.__name__ = f"validate_json_{uuid.uuid4().hex[:8]}"
     return decorator
 
 def log_activity(action, resource_type):
     """Decorator to log user activities"""
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             # Execute the function first
             result = f(*args, **kwargs)
             
@@ -235,13 +258,18 @@ def log_activity(action, resource_type):
             
             return result
         
-        return decorated_function
+        # Preserve the original function name to avoid Flask endpoint conflicts
+        wrapper.__name__ = f.__name__
+        return wrapper
+    
+    # Generate a unique name for the decorator function to avoid Flask endpoint conflicts
+    decorator.__name__ = f"log_activity_{uuid.uuid4().hex[:8]}"
     return decorator
 
 def admin_required(f):
     """Decorator to require admin role"""
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         if not hasattr(g, 'current_user') or not g.current_user:
             return format_response(
                 success=False,
@@ -258,4 +286,6 @@ def admin_required(f):
         
         return f(*args, **kwargs)
     
-    return decorated_function
+    # Preserve the original function name to avoid Flask endpoint conflicts
+    wrapper.__name__ = f.__name__
+    return wrapper
