@@ -52,6 +52,14 @@
           "method": "POST",
           "endpoint": "/auth/logout",
           "description": "Logout current session. This endpoint invalidates the current JWT token, removes the session from active sessions, and logs the logout action in the audit trail. It prevents further API access using the revoked token.",
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
+          "response_example": {
+            "success": true,
+            "message": "Logged out successfully",
+            "data": {}
+          }
         },
         "forgot_password": {
           "method": "POST",
@@ -80,22 +88,10 @@
             }
           }
         },
-        "logout": {
-          "authentication_required": true,
-          "payload": {
-            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-          },
-          "response_example": {
-            "success": true,
-            "message": "Logged out successfully",
-            "data": {}
-          }
-        },
         "logout_all": {
           "method": "POST",
           "endpoint": "/auth/logout-all",
           "description": "Logout all user sessions. This endpoint invalidates all active JWT tokens for the user across all devices, removes all sessions from the database, and logs the action in the audit trail. Useful for security concerns or when changing passwords.",
-          "authentication_required": true,
           "payload": {
             "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
           },
@@ -111,7 +107,6 @@
           "method": "POST",
           "endpoint": "/auth/refresh",
           "description": "Refresh JWT access token. This endpoint validates the provided refresh token, generates a new access token with updated expiration time, and maintains the user's session without requiring re-authentication. Essential for maintaining long-term sessions securely.",
-          "authentication_required": true,
           "payload": {
             "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -128,8 +123,7 @@
         "current_user": {
           "method": "GET",
           "endpoint": "/auth/me",
-          "description": "Get current user information. This endpoint retrieves the authenticated user's complete profile including role, level, and relationships. It uses the JWT token to identify the user without requiring additional credentials.",
-          "authentication_required": true,
+          "description": "Get current user information. This endpoint returns detailed information about the authenticated user, including profile data, permissions, and role information. Used for personalizing the application interface and enforcing access controls.",
           "payload": {
             "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
           },
@@ -156,8 +150,9 @@
           "method": "GET",
           "endpoint": "/auth/sessions",
           "description": "List user's active sessions. This endpoint retrieves all active sessions for the current user across different devices and locations. It provides details about each session including device information, IP address, and last activity timestamp.",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "Sessions retrieved successfully",
@@ -178,8 +173,9 @@
           "method": "DELETE",
           "endpoint": "/auth/sessions/<session_id>",
           "description": "Revoke specific session. This endpoint invalidates a specific session identified by its ID, removing it from active sessions and preventing further API access using its associated token. Useful for logging out from a specific device.",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "Session revoked successfully",
@@ -190,7 +186,6 @@
           "method": "POST",
           "endpoint": "/auth/change-password",
           "description": "Change user password. This endpoint validates the current password, updates it with the new password after hashing, invalidates all existing sessions for security, and logs the password change in the audit trail.",
-          "authentication_required": true,
           "payload": {
             "current_password": "OldPassword123!",
             "new_password": "NewPassword123!"
@@ -205,8 +200,9 @@
           "method": "POST",
           "endpoint": "/auth/verify",
           "description": "Verify JWT token validity. This endpoint checks if the provided token is valid, not expired, and not revoked. It returns the token's expiration time and can be used by clients to proactively refresh tokens before they expire.",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "Token is valid",
@@ -222,9 +218,9 @@
           "method": "POST",
           "endpoint": "/users",
           "description": "Create new user (role-based restrictions apply). This endpoint registers a new user in the system with specified role and level, validates input data, hashes the password securely, assigns relationships (like murabi), and logs the creation in the audit trail.",
-          "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "name": "Jane Doe",
             "phone": "+923001234568",
             "email": "jane@example.com",
@@ -255,8 +251,8 @@
           "method": "GET",
           "endpoint": "/users",
           "description": "List users based on role and hierarchy. This endpoint retrieves users filtered by various criteria with pagination support. It enforces hierarchical access control where users can only see others at or below their level in the organizational structure.",
-          "authentication_required": true,
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "page": 1,
             "limit": 50,
             "role": "Saalik",
@@ -291,10 +287,12 @@
         },
         "get_user": {
           "method": "GET",
-          "endpoint": "/users/<user_id>",
+          "endpoint": "/users",
           "description": "Get specific user details. This endpoint retrieves comprehensive information about a specific user including their profile, level, relationships, and status. Access is controlled by role hierarchy.",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "user_id": "507f1f77bcf86cd799439011"
+          },
           "response_example": {
             "success": true,
             "message": "User retrieved successfully",
@@ -317,10 +315,11 @@
         },
         "update_user": {
           "method": "PUT",
-          "endpoint": "/users/<user_id>",
+          "endpoint": "/users",
           "description": "Update user information. This endpoint modifies user data such as name, email, level, or other attributes. It validates the changes, enforces role-based permissions, and logs all modifications in the audit trail.",
-          "authentication_required": true,
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "user_id": "507f1f77bcf86cd799439011",
             "name": "John Smith",
             "email": "johnsmith@example.com",
             "level": 3
@@ -343,12 +342,13 @@
         },
         "reset_user_cycle": {
           "method": "POST",
-          "endpoint": "/users/<user_id>/reset-cycle",
+          "endpoint": "/users/reset-cycle",
           "description": "Reset user's spiritual cycle",
-          "authentication_required": true,
-          "required_roles": ["Admin", "Sheikh", "Masool"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "user_id": "507f1f77bcf86cd799439011",
             "reset_date": "2024-01-15",
+            "required_roles": ["Admin", "Sheikh", "Masool"],
             "reason": "Level progression"
           },
           "response_example": {
@@ -362,11 +362,12 @@
         },
         "deactivate_user": {
           "method": "POST",
-          "endpoint": "/users/<user_id>/deactivate",
+          "endpoint": "/users/deactivate",
           "description": "Deactivate user account",
-          "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "user_id": "507f1f77bcf86cd799439011",
             "reason": "Inactive for extended period"
           },
           "response_example": {
@@ -377,11 +378,13 @@
         },
         "activate_user": {
           "method": "POST",
-          "endpoint": "/users/<user_id>/activate",
+          "endpoint": "/users/activate",
           "description": "Activate user account",
-          "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool"],
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "user_id": "507f1f77bcf86cd799439011"
+          },
           "response_example": {
             "success": true,
             "message": "User activated successfully",
@@ -394,9 +397,9 @@
           "method": "POST",
           "endpoint": "/entries",
           "description": "Create or update daily entry. This endpoint records a user's spiritual practices for a specific date, calculates completion status based on level requirements, updates streak information, and notifies murabi of significant changes or achievements.",
-          "authentication_required": true,
           "required_roles": ["Saalik"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "date": "2024-01-15",
             "data": {
               "kalma": 100,
@@ -438,8 +441,8 @@
           "method": "GET",
           "endpoint": "/entries",
           "description": "List entries based on role and hierarchy. This endpoint retrieves practice entries with filtering options and pagination. Access control ensures users only see their own entries or those of users they supervise based on role hierarchy.",
-          "authentication_required": true,
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "page": 1,
             "limit": 50,
             "user_id": "507f1f77bcf86cd799439011",
@@ -478,10 +481,12 @@
         },
         "get_entry": {
           "method": "GET",
-          "endpoint": "/entries/<entry_id>",
+          "endpoint": "/entries",
           "description": "Get specific entry details. This endpoint retrieves comprehensive information about a specific practice entry including all recorded values, completion status, cycle day calculation, and any comments from supervisors.",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "entry_id": "507f1f77bcf86cd799439015"
+          },
           "response_example": {
             "success": true,
             "message": "Entry retrieved successfully",
@@ -511,11 +516,12 @@
         },
         "add_comment": {
           "method": "POST",
-          "endpoint": "/entries/<entry_id>/comment",
+          "endpoint": "/entries/comment",
           "description": "Add comment to entry. This endpoint allows supervisors to provide feedback on a user's practice entry, stores the comment with timestamp and author information, and notifies the entry owner of the new comment.",
-          "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "entry_id": "507f1f77bcf86cd799439015",
             "comment": "Good progress, keep it up!"
           },
           "response_example": {
@@ -535,8 +541,8 @@
           "method": "GET",
           "endpoint": "/entries/summary",
           "description": "Get entry summary for user",
-          "authentication_required": true,
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "user_id": "507f1f77bcf86cd799439011",
             "period": "week",
             "start_date": "2024-01-01",
@@ -567,11 +573,13 @@
         },
         "delete_entry": {
           "method": "DELETE",
-          "endpoint": "/entries/<entry_id>",
+          "endpoint": "/entries",
           "description": "Delete entry (admin/masool/sheikh only)",
-          "authentication_required": true,
           "required_roles": ["Admin", "Sheikh", "Masool"],
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "entry_id": "507f1f77bcf86cd799439015"
+          },
           "response_example": {
             "success": true,
             "message": "Entry deleted successfully",
@@ -584,11 +592,11 @@
           "method": "GET",
           "endpoint": "/reports/weekly",
           "description": "Generate weekly reports. This endpoint aggregates practice data for a week period, calculates completion rates and trends, and provides insights into individual and group performance. It supports filtering by user and week offset.",
-          "authentication_required": true,
-          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "user_id": "507f1f77bcf86cd799439011",
-            "week_offset": 0
+            "week_offset": 0,
+            "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"]
           },
           "response_example": {
             "success": true,
@@ -620,12 +628,12 @@
           "method": "GET",
           "endpoint": "/reports/monthly",
           "description": "Generate monthly reports. This endpoint provides comprehensive monthly statistics including completion rates, level distributions, weekly trends, and murabi performance metrics. It offers deeper insights than weekly reports for long-term analysis.",
-          "authentication_required": true,
-          "required_roles": ["Admin", "Sheikh", "Masool"],
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "user_id": "507f1f77bcf86cd799439011",
             "year": 2024,
-            "month": 1
+            "month": 1,
+            "required_roles": ["Admin", "Sheikh", "Masool"]
           },
           "response_example": {
             "success": true,
@@ -669,13 +677,13 @@
           "method": "GET",
           "endpoint": "/reports/custom",
           "description": "Generate custom period reports",
-          "authentication_required": true,
-          "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"],
-          "query_parameters": {
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "start_date": "2024-01-01",
             "end_date": "2024-01-31",
             "user_id": "507f1f77bcf86cd799439011",
-            "group_by": "user"
+            "group_by": "user",
+            "required_roles": ["Admin", "Sheikh", "Masool", "Murabi"]
           },
           "response_example": {
             "success": true,
@@ -706,10 +714,10 @@
           "method": "GET",
           "endpoint": "/reports/analytics",
           "description": "Generate advanced analytics reports",
-          "authentication_required": true,
-          "required_roles": ["Admin", "Sheikh"],
-          "query_parameters": {
-            "period": "month"
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "period": "month",
+            "required_roles": ["Admin", "Sheikh"]
           },
           "response_example": {
             "success": true,
@@ -776,9 +784,10 @@
           "method": "GET",
           "endpoint": "/admin/system/status",
           "description": "Get system status and health metrics",
-          "authentication_required": true,
           "required_roles": ["Admin"],
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "System status retrieved successfully",
@@ -827,9 +836,9 @@
           "method": "POST",
           "endpoint": "/admin/users/bulk-cycle-reset",
           "description": "Reset cycles for multiple users",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "user_ids": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439014"],
             "reset_date": "2024-01-15",
             "reason": "Monthly reset"
@@ -848,9 +857,9 @@
           "method": "POST",
           "endpoint": "/admin/users/bulk-level-update",
           "description": "Update levels for multiple users",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "updates": [
               {
                 "user_id": "507f1f77bcf86cd799439011",
@@ -876,9 +885,9 @@
           "method": "POST",
           "endpoint": "/admin/system/cleanup",
           "description": "Perform system cleanup operations",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "operations": ["expired_sessions", "old_audit_logs", "expired_notifications"],
             "days_to_keep": 90
           },
@@ -896,9 +905,9 @@
           "method": "POST",
           "endpoint": "/admin/system/backup",
           "description": "Create system backup metadata",
-          "authentication_required": true,
-          "required_roles": ["Admin"],
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "Backup initiated successfully. Please use external backup tools for actual data backup.",
@@ -924,9 +933,9 @@
           "method": "POST",
           "endpoint": "/admin/users/force-logout",
           "description": "Force logout specific users or all users",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "user_ids": ["507f1f77bcf86cd799439011"],
             "reason": "Security maintenance"
           },
@@ -943,9 +952,9 @@
           "method": "POST",
           "endpoint": "/admin/system/notifications/broadcast",
           "description": "Send notification to all users or specific groups",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "title": "System Maintenance",
             "message": "System will be under maintenance from 2 AM to 4 AM",
             "type": "system",
@@ -969,9 +978,9 @@
           "method": "POST",
           "endpoint": "/admin/system/api-keys",
           "description": "Create new API key for system integration",
-          "authentication_required": true,
           "required_roles": ["Admin"],
           "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
             "name": "Mobile App Integration",
             "description": "API key for mobile application",
             "expires_in_days": 365
@@ -995,16 +1004,8 @@
           "method": "GET",
           "endpoint": "/admin/audit-logs",
           "description": "Get system audit logs with filtering",
-          "authentication_required": true,
-          "required_roles": ["Admin"],
-          "query_parameters": {
-            "page": 1,
-            "limit": 50,
-            "user_id": "507f1f77bcf86cd799439011",
-            "action": "login",
-            "resource_type": "user",
-            "start_date": "2024-01-01",
-            "end_date": "2024-01-31"
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
           },
           "response_example": {
             "success": true,
@@ -1043,8 +1044,9 @@
           "method": "GET",
           "endpoint": "/levels",
           "description": "Get all Saalik levels with requirements",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
           "response_example": {
             "success": true,
             "message": "Levels retrieved successfully",
@@ -1072,10 +1074,12 @@
         },
         "get_level": {
           "method": "GET",
-          "endpoint": "/levels/<level_number>",
+          "endpoint": "/levels",
           "description": "Get specific level details",
-          "authentication_required": true,
-          "payload": {},
+          "payload": {
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+            "level_number": 0
+          },
           "response_example": {
             "success": true,
             "message": "Level retrieved successfully",

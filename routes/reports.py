@@ -581,39 +581,15 @@ def custom_report():
 @role_required('Sheikh', 'Admin')
 @rate_limit(max_requests=10, window_minutes=60)
 def analytics_report():
-    """Generate advanced analytics report (Sheikh and Admin only)"""
+    """Generate analytics report"""
     current_user = g.current_user
     
-    # Get query parameters
-    period = request.args.get('period', 'month')  # week, month, quarter, year
+    # Get parameters from payload
+    user_id = g.payload.get('user_id')
+    start_date = g.payload.get('start_date')
+    end_date = g.payload.get('end_date')
     
-    # Calculate date range based on period
-    today = date.today()
-    
-    if period == 'week':
-        start_date = today - timedelta(days=today.weekday())
-        end_date = start_date + timedelta(days=6)
-    elif period == 'month':
-        start_date = today.replace(day=1)
-        last_day = calendar.monthrange(today.year, today.month)[1]
-        end_date = today.replace(day=last_day)
-    elif period == 'quarter':
-        quarter = (today.month - 1) // 3 + 1
-        start_month = (quarter - 1) * 3 + 1
-        start_date = date(today.year, start_month, 1)
-        end_month = quarter * 3
-        last_day = calendar.monthrange(today.year, end_month)[1]
-        end_date = date(today.year, end_month, last_day)
-    elif period == 'year':
-        start_date = date(today.year, 1, 1)
-        end_date = date(today.year, 12, 31)
-    else:
-        return format_response(
-            success=False,
-            message="Invalid period. Use 'week', 'month', 'quarter', or 'year'",
-            status_code=400
-        )
-    
+    # Process report logic
     # Get all users in hierarchy
     if current_user.role == 'Admin':
         all_users = User.find_all()

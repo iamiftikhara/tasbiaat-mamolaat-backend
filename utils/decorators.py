@@ -23,6 +23,18 @@ def jwt_required_custom(f):
             payload = request.get_json()
             if payload and 'token' in payload:
                 token = payload.get('token')
+                
+                # Store the entire payload in g for easy access
+                g.payload = payload
+                
+                # Extract path parameters from payload if they exist
+                for param_key in kwargs.keys():
+                    if param_key in payload:
+                        kwargs[param_key] = payload[param_key]
+                
+                # Extract required_roles from payload if it exists
+                if 'required_roles' in payload:
+                    g.required_roles = payload['required_roles']
         
         # Fallback to Authorization header for backward compatibility
         if not token:
@@ -65,7 +77,12 @@ def role_required(*allowed_roles):
                     status_code=401
                 )
             
-            if g.current_user.role not in allowed_roles:
+            # Check if required_roles is in the payload and use that instead
+            roles_to_check = allowed_roles
+            if hasattr(g, 'required_roles'):
+                roles_to_check = g.required_roles
+            
+            if g.current_user.role not in roles_to_check:
                 return format_response(
                     success=False,
                     message="Insufficient permissions",

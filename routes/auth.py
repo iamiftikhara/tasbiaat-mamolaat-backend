@@ -286,12 +286,63 @@ def get_user_sessions():
         data=sessions_data
     )
 
-@auth_bp.route('/sessions/<session_id>', methods=['DELETE'])
+@auth_bp.route('/sessions', methods=['DELETE'])
+@jwt_required_custom
+@log_activity('logout', 'auth')
+def delete_session():
+    """Delete a user session (logout)"""
+    # Get session_id from payload
+    session_id = g.payload.get('session_id')
+    
+    if not session_id:
+        return format_response(
+            success=False,
+            message="Session ID is required",
+            status_code=400
+        )
+    
+    # Find session
+    session = Session.find_by_id(session_id)
+    if not session:
+        return format_response(
+            success=False,
+            message="Session not found",
+            status_code=404
+        )
+    
+    # Check permissions
+    current_user = g.current_user
+    if str(session.user_id) != str(current_user._id) and current_user.role != 'Admin':
+        return format_response(
+            success=False,
+            message="You don't have permission to delete this session",
+            status_code=403
+        )
+    
+    # Delete session
+    session.delete()
+    
+    return format_response(
+        success=True,
+        message="Logged out successfully"
+    )
+
+@auth_bp.route('/revoke-session', methods=['DELETE'])
 @jwt_required_custom
 @log_activity('revoke_session', 'authentication')
-def revoke_session(session_id):
+def revoke_session():
     """Revoke a specific session"""
     user = g.current_user
+    
+    # Get session_id from payload
+    session_id = g.payload.get('session_id')
+    
+    if not session_id:
+        return format_response(
+            success=False,
+            message="Session ID is required",
+            status_code=400
+        )
     
     # Find the session
     session = Session.find_by_token_id(session_id)

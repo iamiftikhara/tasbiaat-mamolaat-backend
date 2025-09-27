@@ -224,12 +224,24 @@ def get_users():
         }
     )
 
-@users_bp.route('/<user_id>', methods=['GET'])
+@users_bp.route('', methods=['GET'])
 @jwt_required_custom
-def get_user(user_id):
-    """Get specific user details"""
+@log_activity('view_user', 'user')
+def get_user():
+    """Get user details by ID with role-based access control"""
     current_user = g.current_user
     
+    # Get user_id from payload
+    user_id = g.payload.get('user_id')
+    
+    # Validate user_id
+    if not user_id:
+        return format_response(
+            success=False,
+            message="User ID is required",
+            status_code=400
+        )
+
     # Find the user
     user = User.find_by_id(user_id)
     if not user:
@@ -276,16 +288,26 @@ def get_user(user_id):
         data=user_data
     )
 
-@users_bp.route('/<user_id>', methods=['PUT'])
+@users_bp.route('', methods=['PUT'])
 @jwt_required_custom
-@validate_json_payload()
+@validate_json_payload
 @log_activity('update_user', 'user')
-def update_user(user_id):
+def update_user():
     """Update user information"""
     current_user = g.current_user
     data = g.json_data
     
-    # Find the user
+    # Get user_id from payload
+    user_id = g.payload.get('user_id')
+    
+    if not user_id:
+        return format_response(
+            success=False,
+            message="User ID is required",
+            status_code=400
+        )
+    
+    # Find user
     user = User.find_by_id(user_id)
     if not user:
         return format_response(
@@ -295,24 +317,22 @@ def update_user(user_id):
         )
     
     # Check permissions
-    can_edit = False
-    
+    can_update = False
     if current_user.role == 'Admin':
-        can_edit = True
-    elif str(current_user._id) == user_id:
-        can_edit = True  # Users can edit their own profile (limited fields)
-    elif current_user.role in ['Sheikh', 'Masool'] and User.is_in_hierarchy(user._id, current_user._id):
-        can_edit = True
-    elif current_user.role == 'Murabi' and str(user.murabi_id) == str(current_user._id):
-        can_edit = True  # Murabi can edit their Saalik (limited fields)
+        can_update = True
+    elif current_user.role in ['Masool', 'Sheikh'] and User.is_in_hierarchy(user._id, current_user._id):
+        can_update = True
+    elif str(current_user._id) == str(user._id):
+        can_update = True
     
-    if not can_edit:
+    if not can_update:
         return format_response(
             success=False,
             message="Insufficient permissions to update this user",
             status_code=403
         )
     
+    # Update fields
     # Store old values for audit log
     old_values = user.to_dict()
     old_values.pop('password_hash', None)
@@ -424,40 +444,20 @@ def update_user(user_id):
             status_code=500
         )
 
-@users_bp.route('/<user_id>/reset-cycle', methods=['POST'])
+@users_bp.route('/reset-cycle', methods=['POST'])
 @jwt_required_custom
-@role_required('Murabi', 'Masool', 'Sheikh', 'Admin')
+@validate_json_payload(required_fields=['user_id'])
 @log_activity('reset_user_cycle', 'user')
-def reset_user_cycle(user_id):
-    """Reset user's cycle (Murabi and above only)"""
+def reset_user_cycle():
+    """Reset user's spiritual cycle"""
     current_user = g.current_user
+    data = g.json_data
     
-    # Find the user
-    user = User.find_by_id(user_id)
-    if not user:
-        return format_response(
-            success=False,
-            message="User not found",
-            status_code=404
-        )
-    
-    # Check permissions
-    can_reset = False
-    
-    if current_user.role == 'Admin':
-        can_reset = True
-    elif current_user.role in ['Sheikh', 'Masool'] and User.is_in_hierarchy(user._id, current_user._id):
-        can_reset = True
-    elif current_user.role == 'Murabi' and str(user.murabi_id) == str(current_user._id):
-        can_reset = True
-    
-    if not can_reset:
-        return format_response(
-            success=False,
-            message="Insufficient permissions to reset this user's cycle",
-            status_code=403
-        )
-    
+    # Get user_id from payload
+    user_id = data.get('user_id')
+    reset_date = data.get('reset_date', datetime.now().strftime('%Y-%m-%d'))
+    reason = data.get('reason', 'Manual reset')
+
     # Reset cycle
     old_start_date = user.level_start_date
     user.level_start_date = datetime.utcnow().date()
@@ -482,23 +482,19 @@ def reset_user_cycle(user_id):
         }
     )
 
-@users_bp.route('/<user_id>/deactivate', methods=['POST'])
+@users_bp.route('/deactivate', methods=['POST'])
 @jwt_required_custom
-@role_required('Sheikh', 'Admin')
+@validate_json_payload(required_fields=['user_id'])
 @log_activity('deactivate_user', 'user')
-def deactivate_user(user_id):
-    """Deactivate user account (Sheikh and Admin only)"""
+def deactivate_user():
+    """Deactivate user account"""
     current_user = g.current_user
+    data = g.json_data
     
-    # Find the user
-    user = User.find_by_id(user_id)
-    if not user:
-        return format_response(
-            success=False,
-            message="User not found",
-            status_code=404
-        )
-    
+    # Get user_id from payload
+    user_id = data.get('user_id')
+    reason = data.get('reason', 'Manual deactivation')
+
     # Cannot deactivate yourself
     if str(current_user._id) == user_id:
         return format_response(
@@ -559,22 +555,17 @@ def deactivate_user(user_id):
         }
     )
 
-@users_bp.route('/<user_id>/activate', methods=['POST'])
+@users_bp.route('/activate', methods=['POST'])
 @jwt_required_custom
-@role_required('Sheikh', 'Admin')
+@validate_json_payload(required_fields=['user_id'])
 @log_activity('activate_user', 'user')
-def activate_user(user_id):
-    """Activate user account (Sheikh and Admin only)"""
+def activate_user():
+    """Activate user account"""
     current_user = g.current_user
+    data = g.json_data
     
-    # Find the user
-    user = User.find_by_id(user_id)
-    if not user:
-        return format_response(
-            success=False,
-            message="User not found",
-            status_code=404
-        )
+    # Get user_id from payload
+    user_id = data.get('user_id')
     
     # Activate user
     user.is_active = True

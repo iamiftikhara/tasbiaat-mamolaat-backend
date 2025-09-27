@@ -254,54 +254,25 @@ def bulk_level_update():
             })
             continue
         
-        if user.role != 'Saalik':
-            failed_updates.append({
-                'user_id': user_id,
-                'error': 'Only Saalik users can have level updates'
-            })
-            continue
+        # Update level
+        old_level = user.level
+        user.level = new_level
+        user.save()
         
-        try:
-            old_level = user.level
-            user.level = new_level
-            user.level_start_date = date.today()  # Reset cycle when level changes
-            user.save()
-            
-            # Log individual update
-            AuditLog.log_action(
-                user_id=current_user._id,
-                action='level_updated',
-                resource_type='user',
-                resource_id=user_id,
-                old_values={'level': old_level, 'level_start_date': user.level_start_date.isoformat()},
-                new_values={'level': new_level, 'level_start_date': date.today().isoformat()},
-                details={'reason': reason, 'bulk_operation': True}
-            )
-            
-            successful_updates += 1
-            
-        except Exception as e:
-            failed_updates.append({
-                'user_id': user_id,
-                'error': str(e)
-            })
-    
-    # Log bulk operation
-    AuditLog.log_action(
-        user_id=current_user._id,
-        action='bulk_level_update',
-        resource_type='system',
-        details={
-            'total_updates': len(updates),
-            'successful_updates': successful_updates,
-            'failed_updates': len(failed_updates),
-            'reason': reason
-        }
-    )
+        # Log level change
+        LevelChangeLog(
+            user_id=user._id,
+            old_level=old_level,
+            new_level=new_level,
+            changed_by=current_user._id,
+            reason=reason
+        ).save()
+        
+        successful_updates += 1
     
     return format_response(
         success=True,
-        message=f"Bulk level update completed. {successful_updates} users updated successfully",
+        message=f"Updated {successful_updates} users successfully",
         data={
             'successful_updates': successful_updates,
             'failed_updates': failed_updates
@@ -753,4 +724,124 @@ def get_audit_logs():
                 'pages': (total_count + limit - 1) // limit
             }
         }
+    )
+
+
+@admin_bp.route('/categories', methods=['GET'])
+@jwt_required_custom
+@role_required('Admin')
+def list_categories():
+    """List all categories"""
+    categories = Category.find_all()
+    return format_response(
+        success=True,
+        message="Categories retrieved successfully",
+        data=categories
+    )
+
+@admin_bp.route('/categories', methods=['POST'])
+@jwt_required_custom
+@role_required('Admin')
+@validate_json_payload
+def create_category():
+    """Create a new category"""
+    data = g.json_data
+    
+    # Validate required fields
+    if 'name' not in data:
+        return format_response(
+            success=False,
+            message="Category name is required",
+            status_code=400
+        )
+    
+    # Create category
+    category = Category(
+        name=data['name'],
+        description=data.get('description', ''),
+        order=data.get('order', 0)
+    )
+    
+    category.save()
+    
+    return format_response(
+        success=True,
+        message="Category created successfully",
+        data=category,
+        status_code=201
+    )
+
+@admin_bp.route('/categories', methods=['PUT'])
+@jwt_required_custom
+@role_required('Admin')
+@validate_json_payload
+def update_category():
+    """Update a category"""
+    data = g.json_data
+    
+    # Get category_id from payload
+    category_id = g.payload.get('category_id')
+    
+    if not category_id:
+        return format_response(
+            success=False,
+            message="Category ID is required",
+            status_code=400
+        )
+    
+    # Find category
+    category = Category.find_by_id(category_id)
+    if not category:
+        return format_response(
+            success=False,
+            message="Category not found",
+            status_code=404
+        )
+    
+    # Update fields
+    if 'name' in data:
+        category.name = data['name']
+    if 'description' in data:
+        category.description = data['description']
+    if 'order' in data:
+        category.order = data['order']
+    
+    category.save()
+    
+    return format_response(
+        success=True,
+        message="Category updated successfully",
+        data=category
+    )
+
+@admin_bp.route('/categories', methods=['DELETE'])
+@jwt_required_custom
+@role_required('Admin')
+def delete_category():
+    """Delete a category"""
+    # Get category_id from payload
+    category_id = g.payload.get('category_id')
+    
+    if not category_id:
+        return format_response(
+            success=False,
+            message="Category ID is required",
+            status_code=400
+        )
+    
+    # Find category
+    category = Category.find_by_id(category_id)
+    if not category:
+        return format_response(
+            success=False,
+            message="Category not found",
+            status_code=404
+        )
+    
+    # Delete category
+    category.delete()
+    
+    return format_response(
+        success=True,
+        message="Category deleted successfully"
     )

@@ -365,11 +365,22 @@ def get_entries():
         }
     )
 
-@entries_bp.route('/<entry_id>', methods=['GET'])
+@entries_bp.route('', methods=['GET'])
 @jwt_required_custom
-def get_entry(entry_id):
+@log_activity('view_entry', 'entry')
+def get_entry():
     """Get specific entry details"""
     current_user = g.current_user
+    
+    # Get entry_id from payload
+    entry_id = g.payload.get('entry_id')
+    
+    if not entry_id:
+        return format_response(
+            success=False,
+            message="Entry ID is required",
+            status_code=400
+        )
     
     # Find the entry
     entry = Entry.find_by_id(entry_id)
@@ -603,15 +614,22 @@ def get_entry_summary():
         }
     )
 
-@entries_bp.route('/<entry_id>', methods=['DELETE'])
+@entries_bp.route('', methods=['DELETE'])
 @jwt_required_custom
-@role_required('Masool', 'Sheikh', 'Admin')
 @log_activity('delete_entry', 'entry')
-def delete_entry(entry_id):
-    """Delete an entry (Masool and above only)"""
-    current_user = g.current_user
+def delete_entry():
+    """Delete an entry"""
+    # Get entry_id from payload
+    entry_id = g.payload.get('entry_id')
     
-    # Find the entry
+    if not entry_id:
+        return format_response(
+            success=False,
+            message="Entry ID is required",
+            status_code=400
+        )
+    
+    # Find entry
     entry = Entry.find_by_id(entry_id)
     if not entry:
         return format_response(
@@ -621,21 +639,21 @@ def delete_entry(entry_id):
         )
     
     # Check permissions
-    can_delete = False
-    
-    if current_user.role == 'Admin':
-        can_delete = True
-    elif current_user.role in ['Masool', 'Sheikh']:
-        user = User.find_by_id(entry.user_id)
-        if user:
-            can_delete = User.is_in_hierarchy(user._id, current_user._id)
-    
-    if not can_delete:
+    current_user = g.current_user
+    if str(entry.user_id) != str(current_user._id) and current_user.role not in ['Admin', 'Sheikh']:
         return format_response(
             success=False,
-            message="Insufficient permissions to delete this entry",
+            message="You don't have permission to delete this entry",
             status_code=403
         )
+    
+    # Delete entry
+    entry.delete()
+    
+    return format_response(
+        success=True,
+        message="Entry deleted successfully"
+    )
     
     # Store entry data for audit log
     entry_data = entry.to_dict()
